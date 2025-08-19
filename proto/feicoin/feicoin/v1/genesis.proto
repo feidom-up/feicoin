@@ -1,0 +1,17 @@
+syntax = "proto3";
+package feicoin.feicoin.v1;
+
+import "amino/amino.proto";
+import "feicoin/feicoin/v1/params.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "feicoin/x/feicoin/types";
+
+// GenesisState defines the feicoin module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
