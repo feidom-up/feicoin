@@ -9,6 +9,15 @@ ignite chain serve
 
 `serve` command installs dependencies, builds, initializes, and starts your blockchain in development.
 
+### Troubleshooting
+
+**macOS linking error fix:**
+If you encounter linking errors with `_SecTrustCopyCertificateChain` on macOS (especially with Go 1.25+), use:
+
+```bash
+export CGO_ENABLED=0 && ignite chain serve
+```
+
 ### Configure
 
 Your blockchain in development can be configured with `config.yml`. To learn more, see the [Ignite CLI docs](https://docs.ignite.com).
