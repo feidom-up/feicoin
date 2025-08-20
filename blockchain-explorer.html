@@ -1011,7 +1011,7 @@
                                 </div>
                                 <div style="margin-top: 15px; text-align: center;">
                                     <button class="btn" onclick="showMintTokenForm()">🔨 模拟增发 (转账)</button>
-                                    <button class="btn" onclick="showRealMintInfo()" style="background: #6c757d;" disabled title="FeiCoin不支持真实增发">💎 真实增发 (不支持)</button>
+                                    <button class="btn" onclick="showRealMintForm()" style="background: #28a745;">💎 真实增发 (Bob专用)</button>
                                     <button class="btn" onclick="showRealMintInfo()" style="background: #17a2b8;">ℹ️ 技术说明</button>
                                     <button class="btn" onclick="refreshTokenStats()">🔄 刷新统计</button>
                                     <button class="btn" onclick="showTokenDistribution()">📊 查看分布</button>
@@ -1073,6 +1073,45 @@
                                 <button class="btn" onclick="hideTokenDistribution()">❌ 关闭</button>
                             </div>
                             
+                            <!-- 真实增发表单 -->
+                            <div id="real-mint-token-form" class="wallet-form" style="display: none; border-left: 4px solid #28a745;">
+                                <h3>💎 真实增发Token (Bob专用)</h3>
+                                <div style="background: #d4edda; padding: 8px; border-radius: 4px; margin-bottom: 15px; font-size: 0.9em; color: #155724;">
+                                    ✅ 注意：这是真实增发功能，会永久增加区块链上的代币总供应量。只有Bob账户有权限执行此操作。
+                                </div>
+                                <div class="form-group">
+                                    <label for="real-mint-from-account">增发授权账户:</label>
+                                    <select id="real-mint-from-account">
+                                        <option value="">选择账户</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="real-mint-to-account">接收地址:</label>
+                                    <select id="real-mint-to-account">
+                                        <option value="">选择接收账户</option>
+                                    </select>
+                                </div>
+                                <div class="mint-form-divider">或</div>
+                                <div class="form-group custom-input">
+                                    <label for="real-mint-to-custom">自定义接收地址:</label>
+                                    <input type="text" id="real-mint-to-custom" placeholder="输入接收地址 (feic1...)">
+                                </div>
+                                <div class="form-group">
+                                    <label for="real-mint-amount">增发数量:</label>
+                                    <input type="number" id="real-mint-amount" placeholder="输入增发数量" min="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="real-mint-denom">代币类型:</label>
+                                    <select id="real-mint-denom">
+                                        <option value="token">token</option>
+                                        <option value="stake">stake</option>
+                                    </select>
+                                </div>
+                                <button class="btn" id="real-mint-btn" onclick="realMintTokens()" style="background: linear-gradient(45deg, #28a745, #20c997);">💎 执行真实增发</button>
+                                <button class="btn" onclick="hideRealMintTokenForm()">❌ 取消</button>
+                                <div id="real-mint-status"></div>
+                            </div>
+
                             <!-- 真实增发说明 -->
                             <div id="real-mint-info" class="wallet-form" style="display: none; border-left: 4px solid #17a2b8;">
                                 <h3>ℹ️ 真实Token增发说明</h3>
@@ -2417,17 +2456,15 @@
         // 执行真实Token增发
         async function realMintTokens() {
             console.log('realMintTokens函数被调用');
-            addLog('info', '💎 开始执行真实Token增发提案...');
+            addLog('info', '💎 开始执行真实Token增发...');
             
             const fromAccount = document.getElementById('real-mint-from-account').value;
             const toAccountSelect = document.getElementById('real-mint-to-account').value.trim();
             const toAccountCustom = document.getElementById('real-mint-to-custom').value.trim();
             const amount = document.getElementById('real-mint-amount').value;
             const denom = document.getElementById('real-mint-denom').value;
-            const title = document.getElementById('real-mint-title').value.trim();
-            const description = document.getElementById('real-mint-description').value.trim();
             
-            console.log('真实增发表单数据:', { fromAccount, toAccountSelect, toAccountCustom, amount, denom, title, description });
+            console.log('真实增发表单数据:', { fromAccount, toAccountSelect, toAccountCustom, amount, denom });
             
             // 确定接收地址：优先使用选择的账户，其次使用自定义输入
             let toAccount = toAccountSelect || toAccountCustom;
@@ -2439,6 +2476,12 @@
             
             if (!toAccount.startsWith('feic1')) {
                 showRealMintStatus('接收地址格式不正确，应以feic1开头', 'error');
+                return;
+            }
+            
+            // 检查是否是bob账户
+            if (fromAccount !== 'bob') {
+                showRealMintStatus('只有bob账户可以执行真实增发', 'error');
                 return;
             }
             
@@ -2454,12 +2497,12 @@
             // 禁用增发按钮
             const realMintBtn = document.getElementById('real-mint-btn');
             realMintBtn.disabled = true;
-            realMintBtn.textContent = '💎 提交中...';
+            realMintBtn.textContent = '💎 增发中...';
             
-            showRealMintStatus(`正在创建治理提案：增发 ${amount} ${denom}...`, 'loading');
+            showRealMintStatus(`正在执行真实增发：${amount} ${denom}...`, 'loading');
             
             try {
-                addLog('info', `💎 正在创建治理提案：增发 ${amount} ${denom} 到 ${toAccountDisplayName} (${toAccount})`);
+                addLog('info', `💎 正在执行真实增发：增发 ${amount} ${denom} 到 ${toAccountDisplayName} (${toAccount})`);
                 
                 const response = await fetch('http://localhost:3001/token/real-mint', {
                     method: 'POST',
@@ -2468,46 +2511,44 @@
                         fromAccount: fromAccount,
                         toAccount: toAccount,
                         amount: amount,
-                        denom: denom,
-                        title: title || `增发 ${amount} ${denom}`,
-                        description: description || `提案增发 ${amount} ${denom} 代币到 ${toAccount}`
+                        denom: denom
                     })
                 });
                 
                 const result = await response.json();
                 if (result.success) {
-                    addSuccessLog(`🎉 治理提案已提交！增发 ${amount} ${denom} 的提案已创建`);
-                    addLog('info', `📊 注意：这是真实的治理提案，需要网络投票通过才会执行增发`);
-                    showRealMintStatus(`🎉 治理提案已提交！需要网络投票通过`, 'success');
+                    addSuccessLog(`🎉 真实增发成功！${amount} ${denom} 已增发到 ${toAccountDisplayName}`);
+                    addLog('info', `📊 注意：这是真实增发，总供应量已永久增加 ${amount} ${denom}`);
+                    showRealMintStatus(`🎉 真实增发成功！${amount} ${denom} 已增发`, 'success');
                     
                     // 清空表单
                     document.getElementById('real-mint-to-account').value = '';
                     document.getElementById('real-mint-to-custom').value = '';
                     document.getElementById('real-mint-amount').value = '';
-                    document.getElementById('real-mint-title').value = '';
-                    document.getElementById('real-mint-description').value = '';
                     
                     // 重新启用按钮
                     realMintBtn.disabled = false;
-                    realMintBtn.textContent = '💎 提交增发提案';
+                    realMintBtn.textContent = '💎 执行真实增发';
                     
-                    // 5秒后关闭表单
+                    // 刷新统计数据
                     setTimeout(() => {
+                        refreshTokenStats();
+                        refreshWalletList();
                         hideRealMintTokenForm();
-                    }, 5000);
+                    }, 3000);
                 } else {
-                    addLog('error', `❌ 治理提案提交失败: ${result.error}`);
-                    showRealMintStatus(`❌ 提案提交失败: ${result.error}`, 'error');
+                    addLog('error', `❌ 真实增发失败: ${result.error}`);
+                    showRealMintStatus(`❌ 增发失败: ${result.error}`, 'error');
                     // 重新启用按钮
                     realMintBtn.disabled = false;
-                    realMintBtn.textContent = '💎 提交增发提案';
+                    realMintBtn.textContent = '💎 执行真实增发';
                 }
             } catch (error) {
-                addLog('error', `❌ 治理提案提交失败: ${error.message}`);
+                addLog('error', `❌ 真实增发失败: ${error.message}`);
                 showRealMintStatus(`❌ 网络错误: ${error.message}`, 'error');
                 // 重新启用按钮
                 realMintBtn.disabled = false;
-                realMintBtn.textContent = '💎 提交增发提案';
+                realMintBtn.textContent = '💎 执行真实增发';
             }
         }
         

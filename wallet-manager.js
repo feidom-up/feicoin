@@ -75,6 +75,9 @@ function handlePostRequest(path, data, res) {
         case '/token/mint':
             handleMintTokens(data, res);
             break;
+        case '/token/real-mint':
+            handleRealMintTokens(data, res);
+            break;
         default:
             res.writeHead(404, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ success: false, error: 'Endpoint not found' }));
@@ -245,6 +248,26 @@ function handleMintTokens(data, res) {
     
     console.log(`Token增发(模拟): ${command}`);
     executeCommand(command, res, 'Token增发');
+}
+
+// 真实Token增发功能（使用自定义MintTokens消息）
+function handleRealMintTokens(data, res) {
+    const { fromAccount, toAccount, amount, denom } = data;
+    
+    if (!fromAccount || !toAccount || !amount || !denom) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+            success: false, 
+            error: 'fromAccount, toAccount, amount and denom are required' 
+        }));
+        return;
+    }
+    
+    // 真实增发使用自定义的MintTokens消息
+    const command = `/Users/ggbond/go/bin/feicoind tx feicoin mint-tokens ${toAccount} ${amount} ${denom} --from ${fromAccount} --keyring-backend test --chain-id feicoin --yes --node http://localhost:26657`;
+    
+    console.log(`Token真实增发: ${command}`);
+    executeCommand(command, res, 'Token真实增发');
 }
 
 

@@ -28,6 +28,17 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "UpdateParams",
 					Skip:      true, // skipped because authority gated
 				},
+				{
+					RpcMethod: "MintTokens",
+					Use:       "mint-tokens [recipient] [amount] [denom]",
+					Short:     "Mint new tokens (bob only)",
+					Long:      "Mint new tokens and send them to the specified recipient. Only bob can execute this command.",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "recipient"},
+						{ProtoField: "amount"},
+						{ProtoField: "denom"},
+					},
+				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
 		},
