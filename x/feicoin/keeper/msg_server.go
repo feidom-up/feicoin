@@ -4,9 +4,11 @@ import (
 	"context"
 	"feicoin/x/feicoin/types"
 	"fmt"
+	"os/exec"
+	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "cosmossdk.io/errors"
 )
 
 type msgServer struct {
@@ -21,24 +23,46 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
+// getBobAddress dynamically gets bob's address from keyring
+func getBobAddress() (string, error) {
+	cmd := exec.Command("feicoind", "keys", "show", "bob", "--keyring-backend", "test", "--output", "json")
+	output, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("failed to get bob's address: %w", err)
+	}
+	
+	var keyInfo struct {
+		Address string `json:"address"`
+	}
+	
+	if err := json.Unmarshal(output, &keyInfo); err != nil {
+		return "", fmt.Errorf("failed to parse bob's address: %w", err)
+	}
+	
+	return keyInfo.Address, nil
+}
+
 // MintTokens allows authorized users to mint new tokens
 func (k msgServer) MintTokens(goCtx context.Context, req *types.MsgMintTokens) (*types.MsgMintTokensResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Get bob's address for permission check
-	bobAddress := "feic1kfde52eamxnnwkn2yjv9uj5xuf0amxuh70tnpw" // Bob's address
+	// Get bob's address dynamically
+	bobAddress, err := getBobAddress()
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "failed to get bob's address")
+	}
 
 	// Check if the authority is bob (the authorized minter)
 	if req.Authority != bobAddress {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, 
-			"only %s can mint tokens, got %s", bobAddress, req.Authority)
+		return nil, sdkerrors.Wrap(fmt.Errorf("unauthorized"), 
+			fmt.Sprintf("only %s can mint tokens, got %s", bobAddress, req.Authority))
 	}
 
 	// Parse the recipient address
 	recipientAddr, err := sdk.AccAddressFromBech32(req.Recipient)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, 
-			"invalid recipient address: %s", err)
+		return nil, sdkerrors.Wrap(err, 
+			fmt.Sprintf("invalid recipient address: %s", req.Recipient))
 	}
 
 	// Create the coin to mint

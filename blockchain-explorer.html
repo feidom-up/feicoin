@@ -10,6 +10,15 @@
             padding: 0;
             box-sizing: border-box;
         }
+        
+        html, body {
+            height: 100vh;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+        }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -25,7 +34,10 @@
             background: transparent;
             border-radius: 0;
             box-shadow: none;
-            overflow: visible;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         .header {
@@ -53,9 +65,11 @@
             display: grid !important;
             grid-template-columns: 1fr 350px !important;
             gap: 20px;
-            min-height: calc(100vh - 200px);
+            height: calc(100vh - 120px);
+            overflow: hidden;
             align-items: start;
             width: 100%;
+            flex: 1;
         }
         
         .tab-operations-panel {
@@ -65,7 +79,7 @@
             border-radius: 15px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             overflow: hidden;
-            min-height: calc(100vh - 200px);
+            height: calc(100% - 50px);
             grid-column: 1;
         }
         
@@ -77,9 +91,8 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             overflow: hidden;
             position: sticky;
-            top: 20px;
-            height: calc(100vh - 200px);
-            min-height: 500px;
+            top: 0;
+            height: calc(100% - 50px);
             grid-column: 2;
             width: 350px;
         }
@@ -192,6 +205,30 @@
             overflow-y: auto;
             border: 2px solid #333;
             min-height: 300px;
+            max-height: calc(100vh - 400px);
+            /* 确保滚动条样式 */
+            scrollbar-width: thin;
+            scrollbar-color: #00ff00 #1e1e1e;
+        }
+        
+        /* Webkit滚动条样式 */
+        .logs::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        .logs::-webkit-scrollbar-track {
+            background: #1e1e1e;
+            border-radius: 5px;
+        }
+        
+        .logs::-webkit-scrollbar-thumb {
+            background: #00ff00;
+            border-radius: 5px;
+            border: 2px solid #1e1e1e;
+        }
+        
+        .logs::-webkit-scrollbar-thumb:hover {
+            background: #00cc00;
         }
 
         .log-entry {
@@ -345,6 +382,23 @@
             box-shadow: 0 3px 10px rgba(0,0,0,0.1);
             margin: 20px 0;
             border-left: 4px solid #2196F3;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        .validator-form.show {
+            display: block !important;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .wallet-form h3,
@@ -761,13 +815,18 @@
             border-radius: 0 0 8px 8px;
             flex: 1;
             overflow-y: auto;
-            max-height: calc(100vh - 200px);
+            overflow-x: hidden;
+            height: calc(100% - 60px); /* 减去 tab header 高度 */
+            max-height: none;
         }
         
         .tab-panel {
             display: none;
             padding: 20px;
             animation: fadeIn 0.3s ease-in;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
         
         .tab-panel.active {
@@ -1408,12 +1467,17 @@
                 <span class="log-timestamp">[${timestamp}]</span>
                 <span class="log-level-${level}">[${level.toUpperCase()}]</span> ${message}
             `;
-            logs.insertBefore(logEntry, logs.firstChild);
+            
+            // 添加到底部，新日志在后
+            logs.appendChild(logEntry);
             
             // 保持最新的100条日志
             while (logs.children.length > 100) {
-                logs.removeChild(logs.lastChild);
+                logs.removeChild(logs.firstChild);
             }
+            
+            // 自动滚动到底部显示最新日志
+            logs.scrollTop = logs.scrollHeight;
         }
 
         // 添加转账专用日志函数
@@ -1527,9 +1591,14 @@
                         const balance = await getBalance(wallet.address);
                         const balanceElement = document.getElementById(`balance-${wallet.name}`);
                         if (balanceElement && balance.length > 0) {
-                            const balanceHtml = balance.map(b => 
-                                `${parseInt(b.amount).toLocaleString()} ${b.denom}`
-                            ).join('<br>');
+                            const balanceHtml = balance.map(b => {
+                                if (b.denom === 'stake') {
+                                    // 显示stake的小数（原始数值）
+                                    return `${parseFloat(b.amount).toLocaleString()} ${b.denom}`;
+                                } else {
+                                    return `${parseInt(b.amount).toLocaleString()} ${b.denom}`;
+                                }
+                            }).join('<br>');
                             balanceElement.innerHTML = balanceHtml;
                         } else if (balanceElement) {
                             balanceElement.innerHTML = '0';
@@ -2318,7 +2387,7 @@
                     }
                 }
                 
-                // 3. 更新统计显示（使用链上真实总量）
+                // 3. 更新统计显示（使用链上真实总量）- stake显示小数
                 document.getElementById('token-total-supply').textContent = `${chainTokenTotal.toLocaleString()} token / ${chainStakeTotal.toLocaleString()} stake`;
                 document.getElementById('token-circulation').textContent = `${chainTokenTotal.toLocaleString()} token / ${chainStakeTotal.toLocaleString()} stake`;
                 document.getElementById('token-holders').textContent = `Token: ${tokenHolders}+ / Stake: ${stakeHolders}+ (钱包内)`;
@@ -2796,9 +2865,14 @@
                     const balance = await getBalance(wallet.address);
                     const balanceElement = document.getElementById(`balance-${wallet.name}`);
                     if (balanceElement && balance.length > 0) {
-                        const balanceHtml = balance.map(b => 
-                            `${parseInt(b.amount).toLocaleString()} ${b.denom}`
-                        ).join('<br>');
+                        const balanceHtml = balance.map(b => {
+                            if (b.denom === 'stake') {
+                                // 显示stake的小数（原始数值）
+                                return `${parseFloat(b.amount).toLocaleString()} ${b.denom}`;
+                            } else {
+                                return `${parseInt(b.amount).toLocaleString()} ${b.denom}`;
+                            }
+                        }).join('<br>');
                         balanceElement.innerHTML = balanceHtml;
                     } else if (balanceElement) {
                         balanceElement.innerHTML = '0';
@@ -3147,22 +3221,41 @@
         // 显示创建验证者表单
         function showCreateValidator() {
             hideValidatorForms();
-            document.getElementById('create-validator-form').style.display = 'block';
+            const form = document.getElementById('create-validator-form');
+            form.style.display = 'block';
+            form.classList.add('show');
             updateValidatorAccountOptions();
+            // 滚动到表单位置
+            form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            addLog('info', '📝 创建验证者表单已打开');
         }
 
         // 显示委托表单
         function showDelegateForm() {
             hideValidatorForms();
-            document.getElementById('delegate-form').style.display = 'block';
+            const form = document.getElementById('delegate-form');
+            form.style.display = 'block';
+            form.classList.add('show');
             updateValidatorAccountOptions();
             updateValidatorOptions();
+            // 滚动到表单位置
+            form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            addLog('info', '🤝 委托质押表单已打开');
         }
 
         // 隐藏所有验证者表单
         function hideValidatorForms() {
-            document.getElementById('create-validator-form').style.display = 'none';
-            document.getElementById('delegate-form').style.display = 'none';
+            const forms = [
+                document.getElementById('create-validator-form'),
+                document.getElementById('delegate-form')
+            ];
+            
+            forms.forEach(form => {
+                if (form) {
+                    form.style.display = 'none';
+                    form.classList.remove('show');
+                }
+            });
         }
 
         // 创建验证者

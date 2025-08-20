@@ -56,7 +56,7 @@ message MsgMintTokens {
   // amount is the amount of tokens to mint (in base units)
   string amount = 3 [
     (cosmos_proto.scalar) = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
   

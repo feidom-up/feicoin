@@ -161,23 +161,65 @@ function handleCreateValidator(data, res) {
             return;
         }
         
-        const pubkey = stdout.trim();
-        const command = `/Users/ggbond/go/bin/feicoind tx staking create-validator \\
-            --amount=${amount}stake \\
-            --pubkey='${pubkey}' \\
-            --moniker="${moniker}" \\
-            --commission-rate="${commissionRate}" \\
-            --commission-max-rate="${maxCommissionRate}" \\
-            --commission-max-change-rate="${maxCommissionChangeRate}" \\
-            --min-self-delegation="1" \\
-            --from=${fromAccount} \\
-            --keyring-backend=test \\
-            --chain-id=feicoin \\
-            --yes \\
-            --node=http://localhost:26657`;
+        const pubkeyStr = stdout.trim();
         
-        console.log(`创建验证者: ${command}`);
-        executeCommand(command, res, '创建验证者');
+        try {
+            // 解析公钥JSON
+            const pubkey = JSON.parse(pubkeyStr);
+            
+            // 创建验证者JSON数据
+            const validatorData = {
+                pubkey: pubkey,
+                amount: `${amount}stake`,
+                moniker: moniker,
+                identity: "",
+                website: "",
+                security: "",
+                details: `Validator created via FeiCoin Explorer`,
+                "commission-rate": commissionRate,
+                "commission-max-rate": maxCommissionRate,
+                "commission-max-change-rate": maxCommissionChangeRate,
+                "min-self-delegation": "1"
+            };
+            
+            // 写入临时JSON文件
+            const fs = require('fs');
+            const validatorJsonPath = `/tmp/validator_${Date.now()}.json`;
+            fs.writeFileSync(validatorJsonPath, JSON.stringify(validatorData, null, 2));
+            
+            console.log(`验证者数据: ${JSON.stringify(validatorData, null, 2)}`);
+            
+            // 使用新格式的命令
+            const command = `/Users/ggbond/go/bin/feicoind tx staking create-validator ${validatorJsonPath} --from ${fromAccount} --keyring-backend test --chain-id feicoin --yes --node http://localhost:26657`;
+            
+            console.log(`创建验证者: ${command}`);
+            
+            // 执行命令并清理临时文件
+            exec(command, (error, stdout, stderr) => {
+                // 清理临时文件
+                try {
+                    fs.unlinkSync(validatorJsonPath);
+                } catch (e) {
+                    console.log('清理临时文件失败:', e.message);
+                }
+                
+                if (error) {
+                    console.error(`创建验证者错误: ${error}`);
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: false, error: error.message, stderr: stderr, output: stdout }));
+                    return;
+                }
+                
+                console.log(`创建验证者成功: ${stdout}`);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true, output: stdout }));
+            });
+            
+        } catch (parseError) {
+            console.error(`解析公钥JSON错误: ${parseError}`);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: '公钥格式错误: ' + parseError.message }));
+        }
     });
 }
 

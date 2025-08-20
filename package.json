@@ -1,0 +1,15 @@
+{
+  "name": "feicoin-blockchain",
+  "version": "1.0.0",
+  "description": "FeiCoin区块链项目",
+  "scripts": {
+    "start": "./start.sh",
+    "dev": "CGO_ENABLED=0 ./start.sh",
+    "blockchain": "CGO_ENABLED=0 ignite chain serve --skip-proto",
+    "wallet-server": "node wallet-manager.js",
+    "build": "CGO_ENABLED=0 go build ./...",
+    "proto": "CGO_ENABLED=0 ignite generate proto-go --yes"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

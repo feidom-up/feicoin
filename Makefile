@@ -19,6 +19,45 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=$(APPNAME) \
 
 BUILD_FLAGS := -ldflags '$(ldflags)'
 
+####################
+###  Quick Start ###
+####################
+
+start:
+	@echo "🚀 启动 FeiCoin 区块链服务..."
+	@./start.sh
+
+dev: start
+
+serve:
+	@echo "🚀 启动所有服务..."
+	@CGO_ENABLED=0 ./start.sh
+
+blockchain-only:
+	@echo "⛓️ 仅启动区块链服务..."
+	@CGO_ENABLED=0 ignite chain serve --skip-proto
+
+wallet-server:
+	@echo "📊 启动钱包管理服务..."
+	@node wallet-manager.js
+
+stop:
+	@echo "🛑 停止所有服务..."
+	@pkill -f "feicoind" 2>/dev/null || true
+	@pkill -f "wallet-manager.js" 2>/dev/null || true
+	@pkill -f "ignite chain serve" 2>/dev/null || true
+	@echo "✅ 所有服务已停止"
+
+build-with-cgo:
+	@echo "🔨 构建项目 (启用CGO)..."
+	@go build $(BUILD_FLAGS) -mod=readonly ./cmd/$(APPNAME)d
+
+build-no-cgo:
+	@echo "🔨 构建项目 (禁用CGO)..."
+	@CGO_ENABLED=0 go build $(BUILD_FLAGS) -mod=readonly ./cmd/$(APPNAME)d
+
+.PHONY: start dev serve blockchain-only wallet-server stop build-with-cgo build-no-cgo
+
 ##############
 ###  Test  ###
 ##############
