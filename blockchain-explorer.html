@@ -1,0 +1,2091 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FeiCoin 区块链浏览器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            min-height: calc(100vh - 150px);
+        }
+        
+        .operations-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .logs-panel {
+            position: sticky;
+            top: 30px;
+            height: fit-content;
+            max-height: calc(100vh - 150px);
+            overflow: hidden;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 18px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 8px;
+        }
+
+
+        .transfer-form {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        .form-row {
+            display: flex;
+            margin-bottom: 12px;
+        }
+        
+        .form-row .form-group {
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9em;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .logs {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            height: 400px;
+            overflow-y: auto;
+            border: 2px solid #333;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .log-timestamp {
+            color: #888;
+            margin-right: 10px;
+        }
+
+        .log-level-info { color: #00ff00; }
+        .log-level-error { color: #ff0000; }
+        .log-level-warning { color: #ffff00; }
+        .log-level-transfer { color: #00bfff; }
+        .log-level-success { color: #32cd32; }
+        
+        .transfer-separator {
+            border: none;
+            border-top: 2px solid #444;
+            margin: 15px 0;
+            background: linear-gradient(90deg, transparent 0%, #00bfff 20%, #00bfff 80%, transparent 100%);
+            height: 2px;
+            position: relative;
+        }
+        
+        .transfer-separator::before {
+            content: '💸 转账流程 💸';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e1e1e;
+            color: #00bfff;
+            padding: 0 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .transfer-end-separator {
+            border: none;
+            border-top: 2px solid #444;
+            margin: 15px 0;
+            background: linear-gradient(90deg, transparent 0%, #32cd32 20%, #32cd32 80%, transparent 100%);
+            height: 2px;
+            position: relative;
+        }
+        
+        .transfer-end-separator::before {
+            content: '✅ 转账完成 ✅';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e1e1e;
+            color: #32cd32;
+            padding: 0 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .transfer-log {
+            background: rgba(0, 191, 255, 0.1);
+            border-left: 3px solid #00bfff;
+            padding-left: 10px;
+            margin: 2px 0;
+        }
+        
+        .success-log {
+            background: rgba(50, 205, 50, 0.15);
+            border-left: 3px solid #32cd32;
+            padding-left: 10px;
+            margin: 2px 0;
+        }
+
+        .status {
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.loading {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .blockchain-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .info-card {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            border-top: 3px solid #4CAF50;
+        }
+
+        .info-card h4 {
+            color: #666;
+            font-size: 0.8em;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .info-card .value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        /* 钱包管理样式 */
+        .wallet-management,
+        .validator-management {
+            margin-top: 20px;
+        }
+        
+        .wallet-actions,
+        .validator-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .wallet-form,
+        .validator-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            margin: 20px 0;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .wallet-form h3,
+        .validator-form h3 {
+            color: #2196F3;
+            margin-bottom: 15px;
+        }
+        
+        .wallet-form textarea,
+        .validator-form textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: monospace;
+            resize: vertical;
+        }
+        
+        .wallet-list,
+        .validator-list {
+            margin-top: 20px;
+        }
+        
+        .wallet-item,
+        .validator-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin: 10px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .wallet-item h4,
+        .validator-item h4 {
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+        
+        .wallet-address,
+        .validator-address {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #666;
+            background: #f5f5f5;
+            padding: 5px 8px;
+            border-radius: 4px;
+            margin: 5px 0;
+            word-break: break-all;
+        }
+        
+        .wallet-balance {
+            margin: 8px 0;
+            padding: 8px 12px;
+            background: #e8f5e8;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .validator-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .validator-status.bonded {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .validator-status.unbonded {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .validator-tokens {
+            font-weight: bold;
+            color: #2196F3;
+        }
+        
+        .mnemonic-display {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+        
+        .mnemonic-warning {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+            color: #721c24;
+            font-weight: bold;
+        }
+        
+        /* 钱包简介模式样式 */
+        .wallet-item-compact {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            margin: 6px;
+            border-left: 3px solid #4CAF50;
+            display: block;
+            min-width: 180px;
+            flex: 1;
+        }
+        
+        .wallets-container-horizontal {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .wallet-compact-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .wallet-compact-info {
+            flex: 1;
+        }
+        
+        .wallet-compact-name {
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 2px;
+            font-size: 0.9em;
+        }
+        
+        .wallet-compact-balance {
+            font-size: 0.8em;
+            color: #666;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 4px;
+        }
+        
+        .wallet-compact-actions {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .wallet-compact-actions-mini {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            margin-top: 6px;
+        }
+        
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 0.75em;
+            border-radius: 3px;
+        }
+        
+        .btn-mini {
+            padding: 3px 6px;
+            font-size: 0.7em;
+            border-radius: 3px;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-mini:hover {
+            transform: scale(1.05);
+        }
+        
+        .wallet-details {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+            display: none;
+        }
+        
+        .wallet-details.expanded {
+            display: block;
+        }
+        
+        .wallet-details .wallet-address {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #666;
+            background: #fff;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 8px 0;
+            word-break: break-all;
+            border: 1px solid #ddd;
+        }
+        
+        .expand-btn {
+            background: none;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+            font-size: 0.85em;
+            text-decoration: underline;
+            padding: 2px 4px;
+            white-space: nowrap;
+        }
+        
+        .expand-btn:hover {
+            color: #0056b3;
+        }
+        
+        /* 奖励管理样式 */
+        .rewards-management {
+            margin-top: 20px;
+        }
+        
+        .rewards-container {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin: 15px 0;
+            border-left: 4px solid #FF9800;
+        }
+        
+        .rewards-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .rewards-header h3 {
+            color: #FF9800;
+            margin: 0;
+            font-size: 1.1em;
+        }
+        
+        .reward-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #fff3e0;
+            border-radius: 6px;
+            margin: 8px 0;
+            border: 1px solid #ffcc02;
+        }
+        
+        .reward-info {
+            flex: 1;
+        }
+        
+        .reward-amount {
+            font-weight: bold;
+            color: #FF9800;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+        }
+        
+        .reward-validator {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        .reward-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-reward {
+            background: linear-gradient(45deg, #FF9800, #F57C00);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-reward:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+        }
+        
+        .btn-reward:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .total-rewards {
+            background: #e8f5e8;
+            padding: 12px;
+            border-radius: 6px;
+            border: 2px solid #4CAF50;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .total-rewards .amount {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #4CAF50;
+            font-family: 'Courier New', monospace;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .wallet-actions,
+            .validator-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 FeiCoin 区块链浏览器</h1>
+            <p>真实区块链浏览器 - 连接 FeiCoin 网络，执行真实转账交易</p>
+        </div>
+
+        <div class="main-content">
+            <!-- 左侧：操作面板 -->
+            <div class="operations-panel">
+                <!-- 区块链状态 -->
+                <div class="section">
+                    <h2>⛓️ 区块链状态</h2>
+                    <div class="blockchain-info">
+                        <div class="info-card">
+                            <h4>当前高度</h4>
+                            <div class="value" id="block-height">-</div>
+                        </div>
+                        <div class="info-card">
+                            <h4>验证者数量</h4>
+                            <div class="value" id="validator-count">-</div>
+                        </div>
+                        <div class="info-card">
+                            <h4>网络ID</h4>
+                            <div class="value" id="chain-id">-</div>
+                        </div>
+                        <div class="info-card">
+                            <h4>最新区块时间</h4>
+                            <div class="value" id="block-time" style="font-size: 1em;">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 转账与钱包管理融合 -->
+                <div class="section">
+                    <h2>💸 转账 & 钱包管理</h2>
+                    
+                    <!-- 钱包余额显示 -->
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h3 style="font-size: 1.1em; margin: 0; color: #333;">💰 账户余额</h3>
+                            <div>
+                                <button class="btn-mini" onclick="refreshWalletList()">🔄</button>
+                                <button class="btn-mini" onclick="showCreateWallet()">+</button>
+                                <button class="btn-mini" onclick="showImportWallet()">📥</button>
+                            </div>
+                        </div>
+                        <div class="wallets-container-horizontal" id="wallets-container">
+                            加载中...
+                        </div>
+                    </div>
+                    
+                    <!-- 转账表单 -->
+                    <div class="transfer-form">
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1; margin-right: 10px;">
+                                <label for="from-account">从账户:</label>
+                                <select id="from-account">
+                                    <option value="alice">Alice (feic1kpyhmumrt5g0veex9lhpzh3m99rptmmuz7cq8u)</option>
+                                    <option value="bob">Bob (feic1kfde52eamxnnwkn2yjv9uj5xuf0amxuh70tnpw)</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="to-account">到账户:</label>
+                                <select id="to-account">
+                                    <option value="bob">Bob (feic1kfde52eamxnnwkn2yjv9uj5xuf0amxuh70tnpw)</option>
+                                    <option value="alice">Alice (feic1kpyhmumrt5g0veex9lhpzh3m99rptmmuz7cq8u)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 2; margin-right: 10px;">
+                                <label for="amount">转账金额:</label>
+                                <input type="number" id="amount" placeholder="输入转账金额" min="1">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="denom">代币类型:</label>
+                                <select id="denom">
+                                    <option value="token">token</option>
+                                    <option value="stake">stake</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="btn" onclick="sendTransfer()" id="transfer-btn">💳 发起转账</button>
+                    </div>
+                    <div id="transfer-status"></div>
+                    
+                    <!-- 钱包创建/导入表单 -->
+                    <div id="create-wallet-form" class="wallet-form" style="display: none;">
+                        <h3>创建新钱包</h3>
+                        <div class="form-group">
+                            <label for="new-wallet-name">钱包名称:</label>
+                            <input type="text" id="new-wallet-name" placeholder="输入钱包名称">
+                        </div>
+                        <button class="btn" onclick="createWallet()">🔑 创建钱包</button>
+                        <button class="btn" onclick="hideWalletForms()">❌ 取消</button>
+                    </div>
+                    
+                    <div id="import-wallet-form" class="wallet-form" style="display: none;">
+                        <h3>导入钱包</h3>
+                        <div class="form-group">
+                            <label for="import-wallet-name">钱包名称:</label>
+                            <input type="text" id="import-wallet-name" placeholder="输入钱包名称">
+                        </div>
+                        <div class="form-group">
+                            <label for="wallet-mnemonic">助记词:</label>
+                            <textarea id="wallet-mnemonic" placeholder="输入12或24个助记词，用空格分隔" rows="3"></textarea>
+                        </div>
+                        <button class="btn" onclick="importWallet()">📥 导入钱包</button>
+                        <button class="btn" onclick="hideWalletForms()">❌ 取消</button>
+                    </div>
+                </div>
+
+
+                <!-- 验证者管理 -->
+                <div class="section">
+                    <h2>⚡ 验证者管理</h2>
+                    <div class="validator-management">
+                        <div class="validator-actions">
+                            <button class="btn" onclick="refreshValidatorList()">🔄 刷新验证者</button>
+                            <button class="btn" onclick="showCreateValidator()">➕ 创建验证者</button>
+                            <button class="btn" onclick="showDelegateForm()">🤝 委托质押</button>
+                        </div>
+                        
+                        <!-- 创建验证者表单 -->
+                        <div id="create-validator-form" class="validator-form" style="display: none;">
+                            <h3>创建验证者</h3>
+                            <div class="form-group">
+                                <label for="validator-account">账户:</label>
+                                <select id="validator-account">
+                                    <option value="">选择账户</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="validator-amount">质押金额:</label>
+                                <input type="number" id="validator-amount" placeholder="质押金额" min="1000000">
+                            </div>
+                            <div class="form-group">
+                                <label for="validator-moniker">验证者名称:</label>
+                                <input type="text" id="validator-moniker" placeholder="验证者显示名称">
+                            </div>
+                            <div class="form-group">
+                                <label for="validator-commission">佣金率 (%):</label>
+                                <input type="number" id="validator-commission" placeholder="10" min="0" max="100" step="0.01">
+                            </div>
+                            <button class="btn" onclick="createValidator()">⚡ 创建验证者</button>
+                            <button class="btn" onclick="hideValidatorForms()">❌ 取消</button>
+                        </div>
+                        
+                        <!-- 委托表单 -->
+                        <div id="delegate-form" class="validator-form" style="display: none;">
+                            <h3>委托质押</h3>
+                            <div class="form-group">
+                                <label for="delegate-account">账户:</label>
+                                <select id="delegate-account">
+                                    <option value="">选择账户</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="delegate-validator">验证者:</label>
+                                <select id="delegate-validator">
+                                    <option value="">选择验证者</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="delegate-amount">委托金额:</label>
+                                <input type="number" id="delegate-amount" placeholder="委托金额" min="1">
+                            </div>
+                            <button class="btn" onclick="delegateStake()">🤝 委托质押</button>
+                            <button class="btn" onclick="hideValidatorForms()">❌ 取消</button>
+                        </div>
+                        
+                        <!-- 验证者列表 -->
+                        <div class="validator-list" id="validator-list">
+                            <h3>验证者列表</h3>
+                            <div id="validators-container">加载中...</div>
+                        </div>
+                        
+                        <!-- 奖励管理 -->
+                        <div class="rewards-management">
+                            <div class="rewards-container">
+                                <div class="rewards-header">
+                                    <h3>🏆 奖励管理</h3>
+                                    <button class="btn-mini" onclick="refreshRewards()" title="刷新奖励">🔄</button>
+                                </div>
+                                
+                                <!-- 总奖励统计 -->
+                                <div class="total-rewards" id="total-rewards">
+                                    <div>总计未提取奖励</div>
+                                    <div class="amount" id="total-reward-amount">加载中...</div>
+                                </div>
+                                
+                                <!-- 奖励详情列表 -->
+                                <div id="rewards-list">
+                                    加载中...
+                                </div>
+                                
+                                <!-- 批量操作 -->
+                                <div style="text-align: center; margin-top: 15px;">
+                                    <button class="btn-reward" onclick="withdrawAllRewards()" id="withdraw-all-btn">
+                                        💰 提取所有奖励
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：日志面板 -->
+            <div class="logs-panel">
+                <div class="section">
+                    <h2>📋 区块链执行日志</h2>
+                    <div style="margin-bottom: 15px;">
+                        <button class="btn" onclick="clearLogs()">🗑️ 清除日志</button>
+                        <button class="btn" onclick="toggleAutoRefresh()">
+                            <span id="auto-refresh-text">⏸️ 停止自动刷新</span>
+                        </button>
+                    </div>
+                    <div class="logs" id="blockchain-logs">
+                        <div class="log-entry">
+                            <span class="log-timestamp">[系统启动]</span>
+                            <span class="log-level-info">[INFO]</span> 🎯 区块链浏览器已加载，等待连接区块链网络...
+                        </div>
+                        <div class="log-entry" style="color: #666; font-style: italic;">
+                            <span class="log-timestamp">[使用提示]</span>
+                            💡 转账日志将以蓝色高亮显示，成功操作以绿色显示
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 账户地址映射 (动态更新)
+        let accounts = {
+            alice: 'feic1kpyhmumrt5g0veex9lhpzh3m99rptmmuz7cq8u',
+            bob: 'feic1kfde52eamxnnwkn2yjv9uj5xuf0amxuh70tnpw'
+        };
+        
+        let allWallets = [];
+        let allValidators = [];
+
+        // 获取账户地址的通用函数
+        function getAccountAddress(accountName) {
+            // 首先检查静态映射
+            if (accounts[accountName]) {
+                return accounts[accountName];
+            }
+            
+            // 然后检查动态钱包列表
+            const wallet = allWallets.find(w => w.name === accountName);
+            if (wallet) {
+                return wallet.address;
+            }
+            
+            // 如果已经是地址格式，直接返回
+            if (accountName && accountName.startsWith('feic1')) {
+                return accountName;
+            }
+            
+            console.error(`无法找到账户 ${accountName} 的地址`);
+            return null;
+        }
+
+        let autoRefreshInterval;
+        let isAutoRefreshing = true;
+
+        // 添加日志函数
+        function addLog(level, message) {
+            const logs = document.getElementById('blockchain-logs');
+            const timestamp = new Date().toLocaleString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <span class="log-timestamp">[${timestamp}]</span>
+                <span class="log-level-${level}">[${level.toUpperCase()}]</span> ${message}
+            `;
+            logs.insertBefore(logEntry, logs.firstChild);
+            
+            // 保持最新的100条日志
+            while (logs.children.length > 100) {
+                logs.removeChild(logs.lastChild);
+            }
+        }
+
+        // 添加转账专用日志函数
+        function addTransferLog(level, message) {
+            const logs = document.getElementById('blockchain-logs');
+            const timestamp = new Date().toLocaleString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry transfer-log`;
+            logEntry.innerHTML = `
+                <span class="log-timestamp">[${timestamp}]</span>
+                <span class="log-level-${level}">[${level.toUpperCase()}]</span> ${message}
+            `;
+            logs.insertBefore(logEntry, logs.firstChild);
+            
+            // 保持最新的100条日志
+            while (logs.children.length > 100) {
+                logs.removeChild(logs.lastChild);
+            }
+        }
+
+        // 添加成功日志函数
+        function addSuccessLog(message) {
+            const logs = document.getElementById('blockchain-logs');
+            const timestamp = new Date().toLocaleString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry success-log`;
+            logEntry.innerHTML = `
+                <span class="log-timestamp">[${timestamp}]</span>
+                <span class="log-level-success">[SUCCESS]</span> ${message}
+            `;
+            logs.insertBefore(logEntry, logs.firstChild);
+            
+            // 保持最新的100条日志
+            while (logs.children.length > 100) {
+                logs.removeChild(logs.lastChild);
+            }
+        }
+
+        // 添加分割线
+        function addTransferSeparator() {
+            const logs = document.getElementById('blockchain-logs');
+            const separator = document.createElement('div');
+            separator.className = 'transfer-separator';
+            logs.insertBefore(separator, logs.firstChild);
+        }
+
+        // 添加转账结束分割线
+        function addTransferEndSeparator() {
+            const logs = document.getElementById('blockchain-logs');
+            const separator = document.createElement('div');
+            separator.className = 'transfer-end-separator';
+            logs.insertBefore(separator, logs.firstChild);
+        }
+
+        // 显示状态信息
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('transfer-status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+            
+            if (type !== 'loading') {
+                setTimeout(() => {
+                    statusDiv.innerHTML = '';
+                }, 5000);
+            }
+        }
+
+        // 获取余额 - 支持账户名和地址
+        async function getBalance(account) {
+            try {
+                // 如果是地址直接使用，如果是账户名则从accounts查找
+                let address = account;
+                if (accounts[account]) {
+                    address = accounts[account];
+                } else if (!account.startsWith('feic1')) {
+                    // 如果不是地址也不在accounts中，尝试从allWallets查找
+                    const wallet = allWallets.find(w => w.name === account);
+                    if (wallet) {
+                        address = wallet.address;
+                    }
+                }
+                
+                const response = await fetch(`http://localhost:1317/cosmos/bank/v1beta1/balances/${address}`);
+                const data = await response.json();
+                return data.balances;
+            } catch (error) {
+                addLog('error', `获取${account}余额失败: ${error.message}`);
+                return [];
+            }
+        }
+
+        // 刷新余额显示 - 现在更新钱包列表中的余额
+        async function refreshBalances() {
+            addLog('info', '正在刷新账户余额...');
+            
+            // 如果钱包列表已加载，则刷新钱包余额显示
+            if (allWallets.length > 0) {
+                for (const wallet of allWallets) {
+                    try {
+                        const balance = await getBalance(wallet.address);
+                        const balanceElement = document.getElementById(`balance-${wallet.name}`);
+                        if (balanceElement && balance.length > 0) {
+                            const balanceHtml = balance.map(b => 
+                                `${parseInt(b.amount).toLocaleString()} ${b.denom}`
+                            ).join('<br>');
+                            balanceElement.innerHTML = balanceHtml;
+                        } else if (balanceElement) {
+                            balanceElement.innerHTML = '0';
+                        }
+                    } catch (error) {
+                        console.error(`刷新${wallet.name}余额失败:`, error);
+                    }
+                }
+            }
+            
+            addLog('info', '钱包余额已更新');
+        }
+
+        // 获取区块链状态
+        async function getBlockchainStatus() {
+            try {
+                // 获取最新区块信息
+                const blockResponse = await fetch('http://localhost:1317/cosmos/base/tendermint/v1beta1/blocks/latest');
+                const blockData = await blockResponse.json();
+                
+                // 获取节点信息
+                const nodeResponse = await fetch('http://localhost:1317/cosmos/base/tendermint/v1beta1/node_info');
+                const nodeData = await nodeResponse.json();
+                
+                // 获取验证者信息
+                const validatorResponse = await fetch('http://localhost:1317/cosmos/staking/v1beta1/validators');
+                const validatorData = await validatorResponse.json();
+                
+                // 更新显示
+                document.getElementById('block-height').textContent = blockData.block.header.height;
+                document.getElementById('validator-count').textContent = validatorData.validators.length;
+                document.getElementById('chain-id').textContent = nodeData.default_node_info.network;
+                document.getElementById('block-time').textContent = new Date(blockData.block.header.time).toLocaleTimeString();
+                
+                addLog('info', `区块 #${blockData.block.header.height} 已确认，包含 ${blockData.block.data.txs ? blockData.block.data.txs.length : 0} 笔交易`);
+            } catch (error) {
+                addLog('error', `获取区块链状态失败: ${error.message}`);
+            }
+        }
+
+        // 真实转账功能 - 使用 CLI 命令执行实际转账
+        async function sendTransfer() {
+            const fromAccount = document.getElementById('from-account').value;
+            const toAccount = document.getElementById('to-account').value;
+            const amount = document.getElementById('amount').value;
+            const denom = document.getElementById('denom').value;
+
+            if (!amount || amount <= 0) {
+                showStatus('请输入有效的转账金额', 'error');
+                return;
+            }
+
+            if (fromAccount === toAccount) {
+                showStatus('不能向自己转账', 'error');
+                return;
+            }
+
+            // 验证账户地址
+            const fromAddress = getAccountAddress(fromAccount);
+            const toAddress = getAccountAddress(toAccount);
+            
+            if (!fromAddress) {
+                showStatus(`无法找到发送账户 ${fromAccount} 的地址`, 'error');
+                return;
+            }
+            
+            if (!toAddress) {
+                showStatus(`无法找到接收账户 ${toAccount} 的地址`, 'error');
+                return;
+            }
+
+            // 禁用按钮
+            document.getElementById('transfer-btn').disabled = true;
+            showStatus(`正在处理从 ${fromAccount} 到 ${toAccount} 的 ${amount} ${denom} 转账...`, 'loading');
+            
+            // 添加转账开始分割线
+            addTransferSeparator();
+            
+            addTransferLog('transfer', `🚀 真实转账交易开始！`);
+            addTransferLog('transfer', `📤 发送方: ${fromAccount.toUpperCase()} → ${getAccountAddress(fromAccount)}`);
+            addTransferLog('transfer', `📥 接收方: ${toAccount.toUpperCase()} → ${getAccountAddress(toAccount)}`);
+            addTransferLog('transfer', `💰 转账金额: ${parseInt(amount).toLocaleString()} ${denom.toUpperCase()}`);
+            
+            try {
+                addTransferLog('transfer', '🔍 第1步：验证账户余额...');
+                
+                // 检查发送方余额
+                const senderBalance = await getBalance(fromAccount);
+                const tokenBalance = senderBalance.find(b => b.denom === denom);
+                
+                if (!tokenBalance || parseInt(tokenBalance.amount) < parseInt(amount)) {
+                    throw new Error(`余额不足。需要 ${amount} ${denom}，但只有 ${tokenBalance ? tokenBalance.amount : 0} ${denom}`);
+                }
+                
+                addTransferLog('transfer', '✅ 余额验证通过 - 账户资金充足');
+                addTransferLog('transfer', '🔐 第2步：通过转账服务器执行交易...');
+                
+                try {
+                    const response = await fetch('http://localhost:3001/transfer', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            fromAccount: fromAccount,
+                            toAccount: getAccountAddress(toAccount),
+                            amount: amount,
+                            denom: denom
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        addTransferLog('transfer', '✅ 转账命令执行成功');
+                        addTransferLog('transfer', '📡 第3步：交易已广播到区块链网络...');
+                        
+                        // 从返回结果中提取交易哈希
+                        const txHashMatch = result.output.match(/txhash: ([A-F0-9]+)/);
+                        const txHash = txHashMatch ? txHashMatch[1] : null;
+                        
+                        if (txHash) {
+                            addTransferLog('transfer', `📋 交易哈希: ${txHash}`);
+                            addTransferLog('transfer', '⛓️ 第4步：等待区块链网络确认交易...');
+                            addTransferLog('transfer', '🔍 开始监控交易状态...');
+                            
+                            // 真正等待区块确认
+                            let confirmed = false;
+                            let attempts = 0;
+                            const maxAttempts = 30; // 最多等待30次，每次2秒
+                            
+                            while (!confirmed && attempts < maxAttempts) {
+                                attempts++;
+                                await new Promise(resolve => setTimeout(resolve, 2000));
+                                
+                                try {
+                                    addTransferLog('transfer', `🔄 第${attempts}次查询: 检查交易是否被打包到区块中...`);
+                                    
+                                    // 查询交易状态
+                                    const txResponse = await fetch(`http://localhost:1317/cosmos/tx/v1beta1/txs/${txHash}`);
+                                    
+                                    if (txResponse.ok) {
+                                        const txData = await txResponse.json();
+                                        
+                                        if (txData.tx_response) {
+                                            const currentHeight = txData.tx_response.height;
+                                            
+                                            if (currentHeight === "0") {
+                                                addTransferLog('transfer', `⏳ 交易还在内存池中，等待验证者打包...`);
+                                                
+                                                // 显示等待进度
+                                                const progress = Math.round((attempts / maxAttempts) * 100);
+                                                addTransferLog('transfer', `📊 等待进度: ${progress}% (${attempts}/${maxAttempts})`);
+                                            } else {
+                                                confirmed = true;
+                                                addTransferLog('transfer', `🎉 交易成功打包！区块高度: #${currentHeight}`);
+                                                addTransferLog('transfer', `✅ 验证者节点已验证并确认交易`);
+                                                addTransferLog('transfer', `📦 交易已永久记录在区块链上`);
+                                                addTransferLog('transfer', `⛽ Gas 消耗: ${txData.tx_response.gas_used}/${txData.tx_response.gas_wanted}`);
+                                                
+                                                // 显示手续费信息
+                                                if (txData.tx && txData.tx.auth_info && txData.tx.auth_info.fee) {
+                                                    const fee = txData.tx.auth_info.fee;
+                                                    if (fee.amount && fee.amount.length > 0) {
+                                                        const feeAmount = fee.amount.map(f => `${f.amount} ${f.denom}`).join(', ');
+                                                        addTransferLog('transfer', `💳 实际手续费: ${feeAmount}`);
+                                                    } else {
+                                                        addTransferLog('transfer', `💳 实际手续费: 免费交易 (Gas Price = 0)`);
+                                                    }
+                                                } else {
+                                                    addTransferLog('transfer', `💳 手续费信息: 未设置或免费网络`);
+                                                }
+                                                
+                                                addTransferLog('transfer', `📅 区块确认时间: ${new Date(txData.tx_response.timestamp).toLocaleString()}`);
+                                                
+                                                // 显示交易详情
+                                                if (txData.tx_response.events) {
+                                                    const transferEvent = txData.tx_response.events.find(e => e.type === 'transfer');
+                                                    if (transferEvent) {
+                                                        const amountAttr = transferEvent.attributes.find(a => a.key === 'amount');
+                                                        if (amountAttr) {
+                                                            addTransferLog('transfer', `💰 链上确认金额: ${amountAttr.value}`);
+                                                        }
+                                                    }
+                                                }
+                                                break;
+                                            }
+                                        } else {
+                                            addTransferLog('transfer', `⚠️ 交易数据格式异常，继续等待...`);
+                                        }
+                                    } else {
+                                        addTransferLog('transfer', `🔍 交易还未被网络接收，继续监控...`);
+                                    }
+                                } catch (queryError) {
+                                    addTransferLog('transfer', `⚠️ 网络查询失败: ${queryError.message}`);
+                                    addTransferLog('transfer', `🔄 将在2秒后重试...`);
+                                }
+                            }
+                            
+                            if (!confirmed) {
+                                addTransferLog('transfer', '⏰ 超时：未能在预期时间内确认，但交易可能仍在处理中');
+                            }
+                        } else {
+                            addTransferLog('transfer', '⚠️ 未能获取交易哈希，使用备用确认方式');
+                            await new Promise(resolve => setTimeout(resolve, 5000));
+                        }
+                        
+                        addTransferLog('transfer', '🔍 第5步：验证交易结果...');
+                        
+                        // 检查余额变化
+                        const newSenderBalance = await getBalance(fromAccount);
+                        const newReceiverBalance = await getBalance(toAccount);
+                        
+                        const newSenderTokenBalance = newSenderBalance.find(b => b.denom === denom);
+                        const newReceiverTokenBalance = newReceiverBalance.find(b => b.denom === denom);
+                        
+                        // 比较余额变化
+                        const oldSenderAmount = parseInt(tokenBalance.amount);
+                        const newSenderAmount = newSenderTokenBalance ? parseInt(newSenderTokenBalance.amount) : 0;
+                        
+                        if (newSenderAmount < oldSenderAmount) {
+                            addSuccessLog('🎉 转账成功！交易已在区块链上确认');
+                            addSuccessLog(`💸 ${fromAccount.toUpperCase()} 余额减少 ${oldSenderAmount - newSenderAmount} ${denom}`);
+                            addSuccessLog(`💰 ${toAccount.toUpperCase()} 当前余额: ${newReceiverTokenBalance ? parseInt(newReceiverTokenBalance.amount).toLocaleString() : 0} ${denom}`);
+                            addSuccessLog('📊 真实区块链交易完成');
+                            showStatus(`🎉 转账成功！从 ${fromAccount} 向 ${toAccount} 转账 ${amount} ${denom}`, 'success');
+                        } else {
+                            addTransferLog('transfer', '⚠️ 余额未变化，可能需要更多时间确认');
+                            showStatus('转账已提交，请稍后查看余额变化', 'success');
+                        }
+                        
+                        // 添加转账结束分割线
+                        addTransferEndSeparator();
+                        
+                        // 刷新余额显示
+                        refreshBalances();
+                        
+                    } else {
+                        throw new Error(result.error || '转账服务器返回错误');
+                    }
+                    
+                } catch (transferError) {
+                    addTransferLog('transfer', '❌ 自动转账失败，尝试手动方式...');
+                    addTransferLog('transfer', `错误信息: ${transferError.message}`);
+                    
+                    // 提供手动命令作为备选方案
+                    const toAddress = getAccountAddress(toAccount);
+                    if (toAddress) {
+                        const transferCommand = `/Users/ggbond/go/bin/feicoind tx bank send ${fromAccount} ${toAddress} ${amount}${denom} --from ${fromAccount} --keyring-backend test --chain-id feicoin --yes --node http://localhost:26657`;
+                        addTransferLog('transfer', '📋 请在终端手动执行以下命令:');
+                        addTransferLog('transfer', `🔧 ${transferCommand}`);
+                    } else {
+                        addTransferLog('transfer', '❌ 无法生成手动命令：目标账户地址无效');
+                    }
+                    
+                    // 10秒后检查余额变化
+                    setTimeout(async () => {
+                        refreshBalances();
+                        addTransferLog('transfer', '🔄 已刷新余额，如有变化则表示转账成功');
+                        addTransferEndSeparator();
+                    }, 10000);
+                    
+                    showStatus('自动转账失败，请查看日志中的手动命令', 'error');
+                }
+                
+            } catch (error) {
+                addLog('error', `❌ 转账失败: ${error.message}`);
+                addTransferEndSeparator();
+                showStatus('转账失败，请检查网络连接和账户状态', 'error');
+                // 重新启用按钮
+                document.getElementById('transfer-btn').disabled = false;
+            }
+        }
+
+        // 清除日志
+        function clearLogs() {
+            document.getElementById('blockchain-logs').innerHTML = '';
+            addLog('info', '日志已清除');
+        }
+
+        // 切换自动刷新
+        function toggleAutoRefresh() {
+            const button = document.getElementById('auto-refresh-text');
+            if (isAutoRefreshing) {
+                clearInterval(autoRefreshInterval);
+                isAutoRefreshing = false;
+                button.textContent = '▶️ 开始自动刷新';
+                addLog('info', '自动刷新已停止');
+            } else {
+                startAutoRefresh();
+                isAutoRefreshing = true;
+                button.textContent = '⏸️ 停止自动刷新';
+                addLog('info', '自动刷新已启动');
+            }
+        }
+
+        // 启动自动刷新
+        function startAutoRefresh() {
+            autoRefreshInterval = setInterval(() => {
+                refreshBalances();
+                getBlockchainStatus();
+            }, 5000); // 每5秒刷新一次，与事件监控同步
+        }
+
+        // 真实区块链事件监控
+        let lastBlockHeight = 0;
+        function monitorBlockchainEvents() {
+            setInterval(async () => {
+                try {
+                    // 获取最新区块信息
+                    const response = await fetch('http://localhost:1317/cosmos/base/tendermint/v1beta1/blocks/latest');
+                    const data = await response.json();
+                    const currentHeight = parseInt(data.block.header.height);
+                    
+                    // 检测新区块
+                    if (lastBlockHeight > 0 && currentHeight > lastBlockHeight) {
+                        const newBlocks = currentHeight - lastBlockHeight;
+                        if (newBlocks === 1) {
+                            addLog('info', `⛓️ 新区块 #${currentHeight} 已生成`);
+                        } else {
+                            addLog('info', `⛓️ 检测到 ${newBlocks} 个新区块，当前高度: ${currentHeight}`);
+                        }
+                        
+                        // 检查区块中是否有交易
+                        const txCount = data.block.data.txs ? data.block.data.txs.length : 0;
+                        if (txCount > 0) {
+                            addLog('info', `📦 区块 #${currentHeight} 包含 ${txCount} 笔交易`);
+                        }
+                        
+                        // 同时更新页面显示的区块高度
+                        document.getElementById('block-height').textContent = currentHeight;
+                    }
+                    
+                    lastBlockHeight = currentHeight;
+                } catch (error) {
+                    // 静默处理错误，避免日志噪音
+                }
+            }, 5000); // 每5秒检查一次新区块
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', async () => {
+            addLog('info', '🚀 FeiCoin 区块链浏览器已启动');
+            addLog('info', '🔗 正在连接到本地节点...');
+            
+            try {
+                await getBlockchainStatus();
+                addLog('info', '✅ 成功连接到区块链网络');
+                
+                // 初始化钱包和验证者列表
+                await refreshWalletList();
+                await refreshValidatorList();
+                
+                // 初始化奖励管理
+                await refreshRewards();
+                
+                // 启动自动刷新
+                startAutoRefresh();
+                
+                // 启动真实区块链事件监控
+                monitorBlockchainEvents();
+                
+            } catch (error) {
+                addLog('error', `❌ 连接失败: ${error.message}`);
+                addLog('warning', '请确保区块链节点正在运行 (ignite chain serve)');
+            }
+        });
+
+        // ===========================================
+        // 钱包管理功能
+        // ===========================================
+
+        // 显示创建钱包表单
+        function showCreateWallet() {
+            hideWalletForms();
+            document.getElementById('create-wallet-form').style.display = 'block';
+        }
+
+        // 显示导入钱包表单
+        function showImportWallet() {
+            hideWalletForms();
+            document.getElementById('import-wallet-form').style.display = 'block';
+        }
+
+        // 隐藏所有钱包表单
+        function hideWalletForms() {
+            document.getElementById('create-wallet-form').style.display = 'none';
+            document.getElementById('import-wallet-form').style.display = 'none';
+        }
+
+        // 创建新钱包
+        async function createWallet() {
+            const name = document.getElementById('new-wallet-name').value.trim();
+            if (!name) {
+                showStatus('请输入钱包名称', 'error');
+                return;
+            }
+
+            try {
+                addLog('info', `🔑 正在创建钱包: ${name}`);
+                const response = await fetch('http://localhost:3001/wallet/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    addSuccessLog(`🎉 钱包 "${name}" 创建成功!`);
+                    
+                    // 显示助记词
+                    if (result.output && result.output.mnemonic) {
+                        const mnemonicDiv = document.createElement('div');
+                        mnemonicDiv.className = 'mnemonic-display';
+                        mnemonicDiv.innerHTML = `
+                            <div class="mnemonic-warning">⚠️ 请安全保存以下助记词，这是恢复钱包的唯一方式！</div>
+                            <strong>助记词:</strong><br>${result.output.mnemonic}
+                        `;
+                        document.getElementById('create-wallet-form').appendChild(mnemonicDiv);
+                    }
+                    
+                    document.getElementById('new-wallet-name').value = '';
+                    setTimeout(() => {
+                        hideWalletForms();
+                        refreshWalletList();
+                    }, 5000);
+                } else {
+                    addLog('error', `❌ 创建钱包失败: ${result.error}`);
+                }
+            } catch (error) {
+                addLog('error', `❌ 创建钱包失败: ${error.message}`);
+            }
+        }
+
+        // 导入钱包
+        async function importWallet() {
+            const name = document.getElementById('import-wallet-name').value.trim();
+            const mnemonic = document.getElementById('wallet-mnemonic').value.trim();
+            
+            if (!name || !mnemonic) {
+                showStatus('请输入钱包名称和助记词', 'error');
+                return;
+            }
+
+            try {
+                addLog('info', `📥 正在导入钱包: ${name}`);
+                const response = await fetch('http://localhost:3001/wallet/import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name, mnemonic: mnemonic })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    addSuccessLog(`🎉 钱包 "${name}" 导入成功!`);
+                    document.getElementById('import-wallet-name').value = '';
+                    document.getElementById('wallet-mnemonic').value = '';
+                    hideWalletForms();
+                    refreshWalletList();
+                } else {
+                    addLog('error', `❌ 导入钱包失败: ${result.error}`);
+                }
+            } catch (error) {
+                addLog('error', `❌ 导入钱包失败: ${error.message}`);
+            }
+        }
+
+        // 刷新钱包列表
+        async function refreshWalletList() {
+            try {
+                addLog('info', '🔄 刷新钱包列表...');
+                const response = await fetch('http://localhost:3001/wallets/list');
+                const result = await response.json();
+                
+                if (result.success) {
+                    allWallets = result.output;
+                    displayWallets();
+                    updateAccountSelects();
+                    addLog('info', `📋 获取到 ${allWallets.length} 个钱包`);
+                } else {
+                    addLog('error', `❌ 获取钱包列表失败: ${result.error}`);
+                }
+            } catch (error) {
+                addLog('error', `❌ 获取钱包列表失败: ${error.message}`);
+            }
+        }
+
+        // 显示钱包列表（横向紧凑模式）
+        async function displayWallets() {
+            const container = document.getElementById('wallets-container');
+            
+            if (allWallets.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">暂无钱包，请创建或导入钱包</div>';
+                return;
+            }
+
+            // 先显示钱包简介信息，然后异步加载余额
+            let html = '';
+            for (const wallet of allWallets) {
+                html += `
+                    <div class="wallet-item-compact" id="wallet-${wallet.name}">
+                        <div class="wallet-compact-name">🔑 ${wallet.name}</div>
+                        <div class="wallet-compact-balance" id="balance-${wallet.name}">加载中...</div>
+                        <div class="wallet-compact-actions-mini">
+                            <button class="btn-mini" onclick="sendTokensToWallet('${wallet.address}')" title="发送1000 token">💰</button>
+                            <button class="btn-mini" onclick="sendStakeToWallet('${wallet.address}')" title="发送1000 stake">🥩</button>
+                            <button class="btn-mini" onclick="toggleWalletDetails('${wallet.name}')" title="查看详情">👁️</button>
+                        </div>
+                        <div class="wallet-details" id="details-${wallet.name}">
+                            <div><strong>完整地址:</strong></div>
+                            <div class="wallet-address">${wallet.address}</div>
+                            <div style="margin-top: 8px; text-align: center;">
+                                <button class="btn btn-small" onclick="sendTokensToWallet('${wallet.address}')">💰 发送代币</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+            
+            // 异步加载每个钱包的余额
+            for (const wallet of allWallets) {
+                try {
+                    const balance = await getBalance(wallet.address);
+                    const balanceElement = document.getElementById(`balance-${wallet.name}`);
+                    if (balanceElement && balance.length > 0) {
+                        const balanceHtml = balance.map(b => 
+                            `${parseInt(b.amount).toLocaleString()} ${b.denom}`
+                        ).join('<br>');
+                        balanceElement.innerHTML = balanceHtml;
+                    } else if (balanceElement) {
+                        balanceElement.innerHTML = '0';
+                    }
+                } catch (error) {
+                    console.error(`加载${wallet.name}余额失败:`, error);
+                    const balanceElement = document.getElementById(`balance-${wallet.name}`);
+                    if (balanceElement) {
+                        balanceElement.innerHTML = '加载失败';
+                    }
+                }
+            }
+        }
+
+        // 切换钱包详情显示
+        function toggleWalletDetails(walletName) {
+            const detailsElement = document.getElementById(`details-${walletName}`);
+            const expandBtn = event.target;
+            
+            if (detailsElement.classList.contains('expanded')) {
+                detailsElement.classList.remove('expanded');
+                expandBtn.textContent = '展开详情';
+            } else {
+                // 关闭其他已展开的详情
+                document.querySelectorAll('.wallet-details.expanded').forEach(el => {
+                    el.classList.remove('expanded');
+                });
+                document.querySelectorAll('.expand-btn').forEach(btn => {
+                    btn.textContent = '展开详情';
+                });
+                
+                // 展开当前钱包详情
+                detailsElement.classList.add('expanded');
+                expandBtn.textContent = '收起详情';
+            }
+        }
+
+        // 发送代币到新钱包（水龙头功能）
+        async function sendTokensToWallet(address) {
+            try {
+                addLog('info', `💰 向 ${address} 发送 token...`);
+                const response = await fetch('http://localhost:3001/wallet/send-tokens', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        toAccount: address,
+                        amount: '1000',
+                        denom: 'token'
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    addSuccessLog(`🎉 成功发送 1000 token 到钱包!`);
+                    setTimeout(() => {
+                        refreshWalletList();
+                        refreshBalances();
+                    }, 3000);
+                } else {
+                    addLog('error', `❌ 发送 token 失败: ${result.error}`);
+                }
+            } catch (error) {
+                addLog('error', `❌ 发送 token 失败: ${error.message}`);
+            }
+        }
+
+        // 发送 stake 到钱包（质押代币水龙头）
+        async function sendStakeToWallet(address) {
+            try {
+                addLog('info', `🥩 向 ${address} 发送 stake...`);
+                const response = await fetch('http://localhost:3001/wallet/send-tokens', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        toAccount: address,
+                        amount: '1000',
+                        denom: 'stake'
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    addSuccessLog(`🎉 成功发送 1000 stake 到钱包!`);
+                    addLog('info', `📝 现在可以用这些 stake 进行质押或创建验证者`);
+                    setTimeout(() => {
+                        refreshWalletList();
+                        refreshBalances();
+                    }, 3000);
+                } else {
+                    addLog('error', `❌ 发送 stake 失败: ${result.error}`);
+                }
+            } catch (error) {
+                addLog('error', `❌ 发送 stake 失败: ${error.message}`);
+            }
+        }
+
+        // ===========================================
+        // 奖励管理功能
+        // ===========================================
+        
+        let allRewards = [];
+        
+        // 刷新奖励信息
+        async function refreshRewards() {
+            try {
+                addLog('info', '🔄 刷新奖励信息...');
+                
+                allRewards = [];
+                let totalAmount = 0;
+                
+                // 获取所有钱包的奖励
+                for (const wallet of allWallets) {
+                    try {
+                        const response = await fetch(`http://localhost:1317/cosmos/distribution/v1beta1/delegators/${wallet.address}/rewards`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.rewards && data.rewards.length > 0) {
+                                for (const reward of data.rewards) {
+                                    if (reward.reward && reward.reward.length > 0) {
+                                        const rewardInfo = {
+                                            delegatorAddress: wallet.address,
+                                            delegatorName: wallet.name,
+                                            validatorAddress: reward.validator_address,
+                                            rewards: reward.reward
+                                        };
+                                        allRewards.push(rewardInfo);
+                                        
+                                        // 计算总奖励 (只计算 stake)
+                                        for (const r of reward.reward) {
+                                            if (r.denom === 'stake') {
+                                                totalAmount += parseFloat(r.amount);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`获取 ${wallet.name} 奖励失败:`, error);
+                    }
+                }
+                
+                displayRewards();
+                updateTotalRewards(totalAmount);
+                addLog('info', `✅ 奖励信息已更新，总计: ${(totalAmount/1000000).toFixed(6)} stake`);
+                
+            } catch (error) {
+                addLog('error', `❌ 刷新奖励失败: ${error.message}`);
+            }
+        }
+        
+        // 显示奖励列表
+        function displayRewards() {
+            const container = document.getElementById('rewards-list');
+            
+            if (allRewards.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">暂无未提取奖励</div>';
+                return;
+            }
+            
+            let html = '';
+            for (const rewardInfo of allRewards) {
+                // 找到对应的验证者名称
+                const validator = allValidators.find(v => v.operator_address === rewardInfo.validatorAddress);
+                const validatorName = validator ? validator.description.moniker : '未知验证者';
+                
+                // 计算奖励金额
+                const stakeReward = rewardInfo.rewards.find(r => r.denom === 'stake');
+                const amount = stakeReward ? (parseFloat(stakeReward.amount) / 1000000).toFixed(6) : '0';
+                
+                if (parseFloat(amount) > 0.000001) { // 只显示有意义的奖励
+                    html += `
+                        <div class="reward-item">
+                            <div class="reward-info">
+                                <div class="reward-amount">💰 ${amount} stake</div>
+                                <div class="reward-validator">
+                                    委托者: ${rewardInfo.delegatorName} → 验证者: ${validatorName}
+                                </div>
+                            </div>
+                            <div class="reward-actions">
+                                <button class="btn-reward" onclick="withdrawSpecificReward('${rewardInfo.delegatorAddress}', '${rewardInfo.validatorAddress}', '${rewardInfo.delegatorName}')">
+                                    💸 提取
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            if (html === '') {
+                html = '<div style="text-align: center; padding: 20px; color: #666;">所有奖励金额太小，暂不显示</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        // 更新总奖励显示
+        function updateTotalRewards(totalAmount) {
+            const totalDisplay = document.getElementById('total-reward-amount');
+            const withdrawBtn = document.getElementById('withdraw-all-btn');
+            
+            const totalStake = (totalAmount / 1000000).toFixed(6);
+            totalDisplay.textContent = `${totalStake} stake`;
+            
+            // 如果没有奖励，禁用提取按钮
+            if (parseFloat(totalStake) < 0.000001) {
+                withdrawBtn.disabled = true;
+                withdrawBtn.textContent = '💰 暂无奖励可提取';
+            } else {
+                withdrawBtn.disabled = false;
+                withdrawBtn.textContent = '💰 提取所有奖励';
+            }
+        }
+        
+        // 提取特定奖励
+        async function withdrawSpecificReward(delegatorAddress, validatorAddress, delegatorName) {
+            try {
+                addLog('info', `🏆 正在为 ${delegatorName} 提取奖励...`);
+                
+                const response = await fetch('http://localhost:3001/rewards/withdraw', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        delegatorAddress: delegatorAddress,
+                        validatorAddress: validatorAddress,
+                        fromAccount: delegatorName
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    addSuccessLog(`🎉 ${delegatorName} 奖励提取成功!`);
+                    
+                    // 等待几秒后刷新
+                    setTimeout(() => {
+                        refreshRewards();
+                        refreshWalletList();
+                    }, 3000);
+                } else {
+                    addLog('error', `❌ 提取奖励失败: ${result.error}`);
+                }
+            } catch (error) {
+                addLog('error', `❌ 提取奖励失败: ${error.message}`);
+            }
+        }
+        
+        // 提取所有奖励
+        async function withdrawAllRewards() {
+            if (allRewards.length === 0) {
+                addLog('warning', '⚠️ 暂无奖励可提取');
+                return;
+            }
+            
+            addLog('info', '🚀 开始批量提取所有奖励...');
+            
+            let successCount = 0;
+            let totalCount = 0;
+            
+            for (const rewardInfo of allRewards) {
+                const stakeReward = rewardInfo.rewards.find(r => r.denom === 'stake');
+                const amount = stakeReward ? parseFloat(stakeReward.amount) : 0;
+                
+                if (amount > 1000) { // 只提取有意义的奖励
+                    totalCount++;
+                    try {
+                        const response = await fetch('http://localhost:3001/rewards/withdraw', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                delegatorAddress: rewardInfo.delegatorAddress,
+                                validatorAddress: rewardInfo.validatorAddress,
+                                fromAccount: rewardInfo.delegatorName
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        if (result.success) {
+                            successCount++;
+                            addLog('info', `✅ ${rewardInfo.delegatorName} 奖励提取成功`);
+                        } else {
+                            addLog('error', `❌ ${rewardInfo.delegatorName} 奖励提取失败: ${result.error}`);
+                        }
+                        
+                        // 避免请求过快
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        
+                    } catch (error) {
+                        addLog('error', `❌ ${rewardInfo.delegatorName} 奖励提取异常: ${error.message}`);
+                    }
+                }
+            }
+            
+            addSuccessLog(`🎊 批量提取完成! 成功: ${successCount}/${totalCount}`);
+            
+            // 等待后刷新
+            setTimeout(() => {
+                refreshRewards();
+                refreshWalletList();
+            }, 3000);
+        }
+
+        // ===========================================
+        // 验证者管理功能
+        // ===========================================
+
+        // 显示创建验证者表单
+        function showCreateValidator() {
+            hideValidatorForms();
+            document.getElementById('create-validator-form').style.display = 'block';
+            updateValidatorAccountOptions();
+        }
+
+        // 显示委托表单
+        function showDelegateForm() {
+            hideValidatorForms();
+            document.getElementById('delegate-form').style.display = 'block';
+            updateValidatorAccountOptions();
+            updateValidatorOptions();
+        }
+
+        // 隐藏所有验证者表单
+        function hideValidatorForms() {
+            document.getElementById('create-validator-form').style.display = 'none';
+            document.getElementById('delegate-form').style.display = 'none';
+        }
+
+        // 创建验证者
+        async function createValidator() {
+            const fromAccount = document.getElementById('validator-account').value;
+            const amount = document.getElementById('validator-amount').value;
+            const moniker = document.getElementById('validator-moniker').value;
+            const commission = document.getElementById('validator-commission').value;
+
+            if (!fromAccount || !amount || !moniker || !commission) {
+                showStatus('请填写所有字段', 'error');
+                return;
+            }
+
+            try {
+                addLog('info', `⚡ 正在创建验证者: ${moniker}`);
+                const response = await fetch('http://localhost:3001/validator/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fromAccount: fromAccount,
+                        amount: amount,
+                        moniker: moniker,
+                        commissionRate: (parseFloat(commission) / 100).toString(),
+                        maxCommissionRate: '0.20',
+                        maxCommissionChangeRate: '0.01'
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    addSuccessLog(`🎉 验证者 "${moniker}" 创建成功!`);
+                    hideValidatorForms();
+                    setTimeout(() => {
+                        refreshValidatorList();
+                        refreshBalances();
+                    }, 5000);
+                } else {
+                    addLog('error', `❌ 创建验证者失败: ${result.error}`);
+                }
+            } catch (error) {
+                addLog('error', `❌ 创建验证者失败: ${error.message}`);
+            }
+        }
+
+        // 委托质押
+        async function delegateStake() {
+            const fromAccount = document.getElementById('delegate-account').value;
+            const validatorAddress = document.getElementById('delegate-validator').value;
+            const amount = document.getElementById('delegate-amount').value;
+
+            if (!fromAccount || !validatorAddress || !amount) {
+                showStatus('请填写所有字段', 'error');
+                return;
+            }
+
+            try {
+                addLog('info', `🤝 正在委托质押 ${amount} stake...`);
+                const response = await fetch('http://localhost:3001/validator/delegate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fromAccount: fromAccount,
+                        validatorAddress: validatorAddress,
+                        amount: amount
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    addSuccessLog(`🎉 委托质押成功!`);
+                    hideValidatorForms();
+                    setTimeout(() => {
+                        refreshValidatorList();
+                        refreshBalances();
+                    }, 3000);
+                } else {
+                    addLog('error', `❌ 委托质押失败: ${result.error}`);
+                }
+            } catch (error) {
+                addLog('error', `❌ 委托质押失败: ${error.message}`);
+            }
+        }
+
+        // 刷新验证者列表
+        async function refreshValidatorList() {
+            try {
+                addLog('info', '🔄 刷新验证者列表...');
+                const response = await fetch('http://localhost:3001/validators/list');
+                const result = await response.json();
+                
+                if (result.success) {
+                    allValidators = result.output.validators;
+                    displayValidators();
+                    addLog('info', `🏛️ 获取到 ${allValidators.length} 个验证者`);
+                } else {
+                    addLog('error', `❌ 获取验证者列表失败: ${result.error}`);
+                }
+            } catch (error) {
+                addLog('error', `❌ 获取验证者列表失败: ${error.message}`);
+            }
+        }
+
+        // 显示验证者列表
+        function displayValidators() {
+            const container = document.getElementById('validators-container');
+            
+            if (allValidators.length === 0) {
+                container.innerHTML = '<p>暂无验证者</p>';
+                return;
+            }
+
+            let html = '';
+            for (const validator of allValidators) {
+                const status = validator.status === 'BOND_STATUS_BONDED' ? 'bonded' : 'unbonded';
+                const statusText = validator.status === 'BOND_STATUS_BONDED' ? '已绑定' : '未绑定';
+                const tokens = (parseInt(validator.tokens) / 1000000).toLocaleString();
+
+                html += `
+                    <div class="validator-item">
+                        <h4>⚡ ${validator.description.moniker}</h4>
+                        <div class="validator-address">${validator.operator_address}</div>
+                        <div><span class="validator-status ${status}">${statusText}</span></div>
+                        <div class="validator-tokens">质押: ${tokens} stake</div>
+                        <div>佣金率: ${(parseFloat(validator.commission.commission_rates.rate) * 100).toFixed(2)}%</div>
+                        <div>是否监禁: ${validator.jailed ? '是' : '否'}</div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        // 更新账户选择选项
+        function updateAccountSelects() {
+            const selects = [
+                'from-account', 
+                'to-account', 
+                'validator-account', 
+                'delegate-account'
+            ];
+            
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    select.innerHTML = '<option value="">选择账户</option>';
+                    allWallets.forEach(wallet => {
+                        select.innerHTML += `<option value="${wallet.name}">${wallet.name} (${wallet.address})</option>`;
+                    });
+                }
+            });
+        }
+
+        // 更新验证者选择选项
+        function updateValidatorOptions() {
+            const select = document.getElementById('delegate-validator');
+            if (select) {
+                select.innerHTML = '<option value="">选择验证者</option>';
+                allValidators.forEach(validator => {
+                    select.innerHTML += `<option value="${validator.operator_address}">${validator.description.moniker}</option>`;
+                });
+            }
+        }
+
+        // 更新验证者账户选项
+        function updateValidatorAccountOptions() {
+            const selects = ['validator-account', 'delegate-account'];
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select && allWallets.length > 0) {
+                    select.innerHTML = '<option value="">选择账户</option>';
+                    allWallets.forEach(wallet => {
+                        select.innerHTML += `<option value="${wallet.name}">${wallet.name}</option>`;
+                    });
+                }
+            });
+        }
+
+        // 处理表单变化
+        document.getElementById('from-account').addEventListener('change', function() {
+            const toSelect = document.getElementById('to-account');
+            const fromValue = this.value;
+            
+            // 自动设置目标账户为另一个账户
+            if (allWallets.length >= 2) {
+                const otherWallet = allWallets.find(w => w.name !== fromValue);
+                if (otherWallet) {
+                    toSelect.value = otherWallet.name;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
