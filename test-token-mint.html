@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token增发功能测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .btn { padding: 10px 15px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background: #45a049; }
+        select, input { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 4px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>🔨 Token增发功能测试</h1>
+    
+    <div class="section">
+        <h2>1. 测试钱包列表API</h2>
+        <button class="btn" onclick="testWalletList()">获取钱包列表</button>
+        <div id="wallet-result" class="log">点击按钮测试...</div>
+    </div>
+    
+    <div class="section">
+        <h2>2. Token增发表单</h2>
+        <div>
+            <label>管理员账户:</label>
+            <select id="from-account">
+                <option value="">选择账户</option>
+            </select>
+        </div>
+        <div>
+            <label>接收地址:</label>
+            <select id="to-account">
+                <option value="">选择接收账户</option>
+            </select>
+        </div>
+        <div>
+            <label>增发数量:</label>
+            <input type="number" id="amount" placeholder="输入数量" min="1">
+        </div>
+        <div>
+            <label>代币类型:</label>
+            <select id="denom">
+                <option value="token">token</option>
+                <option value="stake">stake</option>
+            </select>
+        </div>
+        <button class="btn" onclick="testMint()">测试增发</button>
+        <div id="mint-result" class="log">等待操作...</div>
+    </div>
+
+    <script>
+        let wallets = [];
+        
+        // 测试钱包列表API
+        async function testWalletList() {
+            const resultDiv = document.getElementById('wallet-result');
+            try {
+                resultDiv.textContent = '正在获取钱包列表...';
+                
+                const response = await fetch('http://localhost:3001/wallets/list');
+                const data = await response.json();
+                
+                if (data.success) {
+                    wallets = data.output;
+                    resultDiv.textContent = `成功获取 ${wallets.length} 个钱包:\n` + 
+                        wallets.map(w => `- ${w.name}: ${w.address}`).join('\n');
+                    
+                    // 更新表单选项
+                    updateSelects();
+                } else {
+                    resultDiv.textContent = `错误: ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.textContent = `网络错误: ${error.message}`;
+            }
+        }
+        
+        // 更新选择框
+        function updateSelects() {
+            const fromSelect = document.getElementById('from-account');
+            const toSelect = document.getElementById('to-account');
+            
+            fromSelect.innerHTML = '<option value="">选择管理员账户</option>';
+            toSelect.innerHTML = '<option value="">选择接收账户</option>';
+            
+            wallets.forEach(wallet => {
+                fromSelect.innerHTML += `<option value="${wallet.name}">${wallet.name}</option>`;
+                toSelect.innerHTML += `<option value="${wallet.address}">${wallet.name} (${wallet.address})</option>`;
+            });
+        }
+        
+        // 测试增发功能
+        async function testMint() {
+            const resultDiv = document.getElementById('mint-result');
+            const fromAccount = document.getElementById('from-account').value;
+            const toAccount = document.getElementById('to-account').value;
+            const amount = document.getElementById('amount').value;
+            const denom = document.getElementById('denom').value;
+            
+            if (!fromAccount || !toAccount || !amount) {
+                resultDiv.textContent = '请填写所有字段';
+                return;
+            }
+            
+            try {
+                resultDiv.textContent = '正在执行增发...';
+                
+                const response = await fetch('http://localhost:3001/token/mint', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fromAccount: fromAccount,
+                        toAccount: toAccount,
+                        amount: amount,
+                        denom: denom
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.textContent = `✅ 增发成功!\n命令: ${data.command}\n输出: ${JSON.stringify(data.output, null, 2)}`;
+                } else {
+                    resultDiv.textContent = `❌ 增发失败: ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.textContent = `网络错误: ${error.message}`;
+            }
+        }
+        
+        // 页面加载时自动获取钱包列表
+        window.addEventListener('load', () => {
+            testWalletList();
+        });
+    </script>
+</body>
+</html>

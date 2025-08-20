@@ -72,6 +72,9 @@ function handlePostRequest(path, data, res) {
         case '/rewards/withdraw':
             handleWithdrawRewards(data, res);
             break;
+        case '/token/mint':
+            handleMintTokens(data, res);
+            break;
         default:
             res.writeHead(404, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ success: false, error: 'Endpoint not found' }));
@@ -223,6 +226,28 @@ function handleListValidators(res) {
     executeCommand(command, res, '获取验证者列表');
 }
 
+// Token增发功能（模拟增发，实际上是从管理员账户转账）
+function handleMintTokens(data, res) {
+    const { fromAccount, toAccount, amount, denom } = data;
+    
+    if (!fromAccount || !toAccount || !amount || !denom) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+            success: false, 
+            error: 'fromAccount, toAccount, amount and denom are required' 
+        }));
+        return;
+    }
+    
+    // 注意：这实际上是转账操作，模拟增发
+    // 真实的增发需要特殊的权限和模块实现
+    const command = `/Users/ggbond/go/bin/feicoind tx bank send ${fromAccount} ${toAccount} ${amount}${denom} --from ${fromAccount} --keyring-backend test --chain-id feicoin --yes --node http://localhost:26657`;
+    
+    console.log(`Token增发(模拟): ${command}`);
+    executeCommand(command, res, 'Token增发');
+}
+
+
 // 执行命令的通用函数
 function executeCommand(command, res, operation) {
     exec(command, (error, stdout, stderr) => {
@@ -268,6 +293,7 @@ server.listen(PORT, () => {
     console.log('  🤝 委托质押: POST /validator/delegate');
     console.log('  ↩️  取消委托: POST /validator/undelegate');
     console.log('  🏆 提取奖励: POST /rewards/withdraw');
+    console.log('  🔨 Token增发(模拟): POST /token/mint');
     console.log('  📜 钱包列表: GET /wallets/list');
     console.log('  🏛️  验证者列表: GET /validators/list');
 });
