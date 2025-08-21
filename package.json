@@ -10,6 +10,7 @@
     "build": "CGO_ENABLED=0 go build ./...",
     "proto": "CGO_ENABLED=0 ignite generate proto-go --yes"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
 }

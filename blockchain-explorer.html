@@ -872,6 +872,174 @@
             color: #666;
             font-style: italic;
         }
+        
+        /* 交易记录样式 */
+        .transaction-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin: 10px 0;
+            border-left: 4px solid #2196F3;
+            transition: all 0.3s ease;
+        }
+        
+        .transaction-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .transaction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .transaction-type {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .transaction-type.bank_send {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .transaction-type.delegate {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .transaction-type.create_validator {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .transaction-type.withdraw_reward {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .transaction-type.mint_tokens {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+        
+        .transaction-type.unknown {
+            background: #f5f5f5;
+            color: #666;
+        }
+        
+        .transaction-status {
+            display: inline-block;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .transaction-status.success {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+        
+        .transaction-status.failed {
+            background: #ffcdd2;
+            color: #d32f2f;
+        }
+        
+        .transaction-hash {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #666;
+            margin: 5px 0;
+            word-break: break-all;
+        }
+        
+        .transaction-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .transaction-detail-item {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        
+        .transaction-detail-label {
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 2px;
+        }
+        
+        .transaction-detail-value {
+            color: #333;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+        }
+        
+        .transaction-amount {
+            font-weight: bold;
+            color: #4CAF50;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .transaction-memo {
+            background: #fffbf0;
+            border: 1px solid #ffd54f;
+            border-radius: 4px;
+            padding: 8px;
+            margin-top: 8px;
+            font-style: italic;
+            color: #f57c00;
+        }
+        
+        .transaction-time {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .transaction-pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .transaction-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px dashed #ddd;
+        }
+        
+        .transaction-loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        
+        .transaction-error {
+            text-align: center;
+            padding: 20px;
+            color: #d32f2f;
+            background: #ffebee;
+            border: 1px solid #ffcdd2;
+            border-radius: 8px;
+        }
 
         @media (max-width: 768px) {
             .container {
@@ -1119,12 +1287,13 @@
                             <!-- Token分布表 -->
                             <div id="token-distribution-section" class="wallet-form" style="display: none; border-left: 4px solid #2196F3;">
                                 <h3>📊 Token 分布统计</h3>
-                                <div style="margin-bottom: 15px;">
+                                <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
                                     <select id="distribution-token-type" onchange="refreshTokenDistribution()">
                                         <option value="token">Token</option>
                                         <option value="stake">Stake</option>
                                     </select>
-                                    <button class="btn-mini" onclick="refreshTokenDistribution()">🔄</button>
+                                    <button class="btn" onclick="refreshTokenDistribution()" style="padding: 5px 12px;">🔄 刷新分布</button>
+                                    <small style="color: #666;">自动与Token流通量同步</small>
                                 </div>
                                 <div id="token-distribution-list">
                                     加载中...
@@ -1242,15 +1411,15 @@
                                     <div class="form-group" style="flex: 1; margin-right: 10px;">
                                         <label for="from-account">从账户:</label>
                                         <select id="from-account">
-                                            <option value="alice">Alice (feic1kpyhmumrt5g0veex9lhpzh3m99rptmmuz7cq8u)</option>
-                                            <option value="bob">Bob (feic1kfde52eamxnnwkn2yjv9uj5xuf0amxuh70tnpw)</option>
+                                            <option value="alice">Alice (feic1pcgdlgflvl6spqyh4wxkls373dhwjl88afapez)</option>
+                                            <option value="bob">Bob (feic1k07xagycs2k3us7umw6qv9ltcw4efgqtm96tms)</option>
                                         </select>
                                     </div>
                                     <div class="form-group" style="flex: 1;">
                                         <label for="to-account">到账户:</label>
                                         <select id="to-account">
-                                            <option value="bob">Bob (feic1kfde52eamxnnwkn2yjv9uj5xuf0amxuh70tnpw)</option>
-                                            <option value="alice">Alice (feic1kpyhmumrt5g0veex9lhpzh3m99rptmmuz7cq8u)</option>
+                                            <option value="bob">Bob (feic1k07xagycs2k3us7umw6qv9ltcw4efgqtm96tms)</option>
+                                            <option value="alice">Alice (feic1pcgdlgflvl6spqyh4wxkls373dhwjl88afapez)</option>
                                         </select>
                                     </div>
                                 </div>
@@ -1266,6 +1435,10 @@
                                             <option value="stake">stake</option>
                                         </select>
                                     </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="transfer-memo">备注信息 (可选):</label>
+                                    <input type="text" id="transfer-memo" placeholder="输入转账备注，方便查找交易记录" maxlength="200">
                                 </div>
                                 <button class="btn" onclick="sendTransfer()" id="transfer-btn">💳 发起转账</button>
                             </div>
@@ -1294,6 +1467,58 @@
                                 </div>
                                 <button class="btn" onclick="importWallet()">📥 导入钱包</button>
                                 <button class="btn" onclick="hideWalletForms()">❌ 取消</button>
+                            </div>
+                            
+                            <!-- 交易记录管理区域 -->
+                            <div style="margin-top: 30px;">
+                                <h3 style="color: #333; margin-bottom: 15px; border-bottom: 2px solid #4CAF50; padding-bottom: 8px;">
+                                    📋 交易记录
+                                </h3>
+                                
+                                <!-- 交易记录搜索和筛选 -->
+                                <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                                    <div class="form-row">
+                                        <div class="form-group" style="flex: 2; margin-right: 10px;">
+                                            <label for="tx-search">搜索交易:</label>
+                                            <input type="text" id="tx-search" placeholder="交易哈希、地址、备注..." onkeyup="handleTransactionSearch()">
+                                        </div>
+                                        <div class="form-group" style="flex: 1; margin-right: 10px;">
+                                            <label for="tx-type-filter">交易类型:</label>
+                                            <select id="tx-type-filter" onchange="handleTransactionSearch()">
+                                                <option value="all">全部类型</option>
+                                                <option value="bank_send">转账</option>
+                                                <option value="delegate">委托质押</option>
+                                                <option value="create_validator">创建验证者</option>
+                                                <option value="withdraw_reward">提取奖励</option>
+                                                <option value="mint_tokens">增发代币</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group" style="flex: 1;">
+                                            <label for="tx-account-filter">关联账户:</label>
+                                            <select id="tx-account-filter" onchange="handleTransactionSearch()">
+                                                <option value="">全部账户</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div style="text-align: center; margin-top: 10px;">
+                                        <button class="btn" onclick="refreshTransactionList()">🔄 刷新交易</button>
+                                        <button class="btn" onclick="clearTransactionSearch()">🗑️ 清除筛选</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- 交易记录列表 -->
+                                <div id="transaction-list-container">
+                                    <div id="transaction-list">
+                                        加载中...
+                                    </div>
+                                    
+                                    <!-- 分页控制 -->
+                                    <div id="transaction-pagination" style="text-align: center; margin-top: 15px; display: none;">
+                                        <button class="btn" id="tx-prev-btn" onclick="loadTransactionPage('prev')" disabled>⬅️ 上一页</button>
+                                        <span id="tx-page-info" style="margin: 0 15px; font-weight: bold;">第 1 页</span>
+                                        <button class="btn" id="tx-next-btn" onclick="loadTransactionPage('next')">下一页 ➡️</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1425,8 +1650,8 @@
     <script>
         // 账户地址映射 (动态更新)
         let accounts = {
-            alice: 'feic1kpyhmumrt5g0veex9lhpzh3m99rptmmuz7cq8u',
-            bob: 'feic1kfde52eamxnnwkn2yjv9uj5xuf0amxuh70tnpw'
+            alice: 'feic1pcgdlgflvl6spqyh4wxkls373dhwjl88afapez',
+            bob: 'feic1k07xagycs2k3us7umw6qv9ltcw4efgqtm96tms'
         };
         
         let allWallets = [];
@@ -1811,6 +2036,7 @@
             const toAccount = document.getElementById('to-account').value;
             const amount = document.getElementById('amount').value;
             const denom = document.getElementById('denom').value;
+            const memo = document.getElementById('transfer-memo').value;
 
             if (!amount || amount <= 0) {
                 showStatus('请输入有效的转账金额', 'error');
@@ -1872,7 +2098,8 @@
                             fromAccount: fromAccount,
                             toAccount: getAccountAddress(toAccount),
                             amount: amount,
-                            denom: denom
+                            denom: denom,
+                            memo: memo
                         })
                     });
                     
@@ -2001,6 +2228,15 @@
                         
                         // 刷新余额显示
                         refreshBalances();
+                        
+                        // 刷新交易记录
+                        if (typeof refreshTransactionList === 'function') {
+                            setTimeout(() => refreshTransactionList(), 3000);
+                        }
+                        
+                        // 清除表单
+                        document.getElementById('amount').value = '';
+                        document.getElementById('transfer-memo').value = '';
                         
                         // 重新启用转账按钮
                         document.getElementById('transfer-btn').disabled = false;
@@ -2633,7 +2869,7 @@
                 let distributions = [];
                 let totalAmount = 0;
                 
-                // 获取所有钱包的指定代币余额
+                // 方法1: 优先获取已知钱包的余额（有名称显示）
                 for (const wallet of allWallets) {
                     try {
                         const balance = await getBalance(wallet.address);
@@ -2644,13 +2880,46 @@
                             distributions.push({
                                 name: wallet.name,
                                 address: wallet.address,
-                                amount: amount
+                                amount: amount,
+                                type: 'known_wallet'
                             });
                             totalAmount += amount;
                         }
                     } catch (error) {
                         console.error(`获取${wallet.name}余额失败:`, error);
                     }
+                }
+                
+                // 方法2: 获取链上总供应量作为参考（使用相同API确保一致性）
+                try {
+                    const supplyResponse = await fetch('http://localhost:1317/cosmos/bank/v1beta1/supply');
+                    if (supplyResponse.ok) {
+                        const supplyData = await supplyResponse.json();
+                        
+                        if (supplyData.supply) {
+                            const tokenSupply = supplyData.supply.find(s => s.denom === tokenType);
+                            if (tokenSupply) {
+                                const chainTotal = parseInt(tokenSupply.amount);
+                                
+                                console.log(`链上${tokenType}总量: ${chainTotal}, 钱包统计: ${totalAmount}`);
+                                
+                                // 如果钱包统计总量小于链上总量，添加"其他地址"项
+                                if (totalAmount < chainTotal) {
+                                    const otherAmount = chainTotal - totalAmount;
+                                    distributions.push({
+                                        name: '其他地址',
+                                        address: '(链上其他持有者)',
+                                        amount: otherAmount,
+                                        type: 'others'
+                                    });
+                                    totalAmount = chainTotal;
+                                    addLog('info', `发现 ${otherAmount.toLocaleString()} ${tokenType} 在其他地址中`);
+                                }
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.log('获取链上总供应量失败:', error.message);
                 }
                 
                 // 按余额排序
@@ -2676,10 +2945,15 @@
                     
                     distributions.forEach((dist, index) => {
                         const percentage = totalAmount > 0 ? ((dist.amount / totalAmount) * 100).toFixed(2) : '0';
+                        const rowClass = dist.type === 'others' ? 'style="background-color: #fff3cd;"' : '';
+                        const nameDisplay = dist.type === 'others' ? 
+                            `<span style="color: #856404;">🔍 ${dist.name}</span>` : 
+                            `<strong>${dist.name}</strong>`;
+                        
                         tableHtml += `
-                            <tr>
+                            <tr ${rowClass}>
                                 <td>${index + 1}</td>
-                                <td><strong>${dist.name}</strong></td>
+                                <td>${nameDisplay}</td>
                                 <td class="address-cell" title="${dist.address}">${dist.address}</td>
                                 <td class="amount-cell">${dist.amount.toLocaleString()} ${tokenType}</td>
                                 <td class="percentage-cell">${percentage}%</td>
@@ -2693,6 +2967,9 @@
                         <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px;">
                             <strong>总计:</strong> ${totalAmount.toLocaleString()} ${tokenType} 
                             <span style="margin-left: 20px;"><strong>持有者数量:</strong> ${distributions.length}</span>
+                            <br><small style="color: #666; margin-top: 5px; display: block;">
+                                ✅ 现在与"Token流通量"数据一致（包含链上所有持有者）
+                            </small>
                         </div>
                     `;
                     
@@ -2817,6 +3094,7 @@
                     allWallets = result.output;
                     displayWallets();
                     updateAccountSelects();
+                    updateTransactionAccountFilter(); // 更新交易筛选选项
                     addLog('info', `📋 获取到 ${allWallets.length} 个钱包`);
                 } else {
                     addLog('error', `❌ 获取钱包列表失败: ${result.error}`);
@@ -3434,6 +3712,269 @@
         }
 
         // ===========================================
+        // 交易记录管理功能
+        // ===========================================
+        
+        let currentTransactionPage = 1;
+        let transactionPageSize = 10;
+        let allTransactions = [];
+        let searchTimeout = null;
+        
+        // 刷新交易记录列表
+        async function refreshTransactionList() {
+            try {
+                addLog('info', '🔄 正在刷新交易记录...');
+                
+                const account = document.getElementById('tx-account-filter').value;
+                const response = await fetch(`http://localhost:3001/transactions/list?account=${account}&page=${currentTransactionPage}&limit=${transactionPageSize}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    allTransactions = result.data.transactions;
+                    displayTransactions(allTransactions);
+                    updateTransactionPagination(result.data.page, result.data.total);
+                    addLog('info', `✅ 获取到 ${allTransactions.length} 笔交易记录`);
+                } else {
+                    displayTransactionError('获取交易记录失败: ' + result.error);
+                    addLog('error', `❌ 获取交易记录失败: ${result.error}`);
+                }
+            } catch (error) {
+                displayTransactionError('网络错误: ' + error.message);
+                addLog('error', `❌ 获取交易记录失败: ${error.message}`);
+            }
+        }
+        
+        // 显示交易记录列表
+        function displayTransactions(transactions) {
+            const container = document.getElementById('transaction-list');
+            
+            if (!transactions || transactions.length === 0) {
+                container.innerHTML = '<div class="transaction-empty">📭 暂无交易记录</div>';
+                document.getElementById('transaction-pagination').style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            transactions.forEach(tx => {
+                html += createTransactionItemHTML(tx);
+            });
+            
+            container.innerHTML = html;
+            document.getElementById('transaction-pagination').style.display = 'block';
+        }
+        
+        // 创建单个交易项的HTML
+        function createTransactionItemHTML(tx) {
+            const typeDisplayName = getTransactionTypeDisplayName(tx.type);
+            const timeStr = new Date(tx.timestamp).toLocaleString();
+            const statusText = tx.status === 'success' ? '成功' : '失败';
+            
+            // 格式化金额
+            let amountHTML = '';
+            if (tx.amount && Array.isArray(tx.amount) && tx.amount.length > 0) {
+                amountHTML = tx.amount.map(amt => 
+                    `<span class="transaction-amount">${parseInt(amt.amount).toLocaleString()} ${amt.denom}</span>`
+                ).join(', ');
+            }
+            
+            // 创建交易详情
+            let detailsHTML = '';
+            if (tx.from_address || tx.to_address) {
+                detailsHTML += '<div class="transaction-details">';
+                
+                if (tx.from_address) {
+                    detailsHTML += `
+                        <div class="transaction-detail-item">
+                            <div class="transaction-detail-label">发送方:</div>
+                            <div class="transaction-detail-value">${getAccountDisplayName(tx.from_address)}</div>
+                        </div>
+                    `;
+                }
+                
+                if (tx.to_address) {
+                    detailsHTML += `
+                        <div class="transaction-detail-item">
+                            <div class="transaction-detail-label">接收方:</div>
+                            <div class="transaction-detail-value">${getAccountDisplayName(tx.to_address)}</div>
+                        </div>
+                    `;
+                }
+                
+                if (amountHTML) {
+                    detailsHTML += `
+                        <div class="transaction-detail-item">
+                            <div class="transaction-detail-label">金额:</div>
+                            <div class="transaction-detail-value">${amountHTML}</div>
+                        </div>
+                    `;
+                }
+                
+                if (tx.gas_used && tx.gas_used !== '0') {
+                    detailsHTML += `
+                        <div class="transaction-detail-item">
+                            <div class="transaction-detail-label">Gas 消耗:</div>
+                            <div class="transaction-detail-value">${tx.gas_used}/${tx.gas_wanted}</div>
+                        </div>
+                    `;
+                }
+                
+                detailsHTML += '</div>';
+            }
+            
+            // 备注信息
+            let memoHTML = '';
+            if (tx.memo && tx.memo.trim()) {
+                memoHTML = `<div class="transaction-memo">💬 备注: ${tx.memo}</div>`;
+            }
+            
+            return `
+                <div class="transaction-item">
+                    <div class="transaction-header">
+                        <div>
+                            <span class="transaction-type ${tx.type}">${typeDisplayName}</span>
+                            <span class="transaction-status ${tx.status}">${statusText}</span>
+                        </div>
+                        <div class="transaction-time">
+                            区块 #${tx.height} • ${timeStr}
+                        </div>
+                    </div>
+                    
+                    <div class="transaction-hash">
+                        🔗 交易哈希: ${tx.txhash}
+                    </div>
+                    
+                    ${detailsHTML}
+                    ${memoHTML}
+                </div>
+            `;
+        }
+        
+        // 获取交易类型显示名称
+        function getTransactionTypeDisplayName(type) {
+            const typeMap = {
+                'bank_send': '💰 转账',
+                'delegate': '🤝 委托质押',
+                'create_validator': '⚡ 创建验证者',
+                'withdraw_reward': '🏆 提取奖励',
+                'mint_tokens': '🔨 增发代币',
+                'unknown': '❓ 未知类型'
+            };
+            return typeMap[type] || `❓ ${type}`;
+        }
+        
+        // 获取账户显示名称
+        function getAccountDisplayName(address) {
+            if (!address) return '';
+            
+            // 查找钱包名称
+            const wallet = allWallets.find(w => w.address === address);
+            if (wallet) {
+                return `${wallet.name} (${address.substring(0, 12)}...)`;
+            }
+            
+            // 显示地址的前12个和后6个字符
+            if (address.length > 20) {
+                return `${address.substring(0, 12)}...${address.substring(address.length - 6)}`;
+            }
+            
+            return address;
+        }
+        
+        // 处理交易搜索（防抖）
+        function handleTransactionSearch() {
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+            
+            searchTimeout = setTimeout(() => {
+                performTransactionSearch();
+            }, 500); // 500ms 防抖
+        }
+        
+        // 执行交易搜索
+        async function performTransactionSearch() {
+            try {
+                const query = document.getElementById('tx-search').value.trim();
+                const type = document.getElementById('tx-type-filter').value;
+                const account = document.getElementById('tx-account-filter').value;
+                
+                addLog('info', '🔍 正在搜索交易记录...');
+                
+                let url = `http://localhost:3001/transactions/search?page=1&limit=${transactionPageSize}`;
+                if (query) url += `&q=${encodeURIComponent(query)}`;
+                if (type && type !== 'all') url += `&type=${type}`;
+                if (account) url += `&account=${encodeURIComponent(account)}`;
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayTransactions(result.data.transactions);
+                    updateTransactionPagination(1, result.data.transactions.length);
+                    addLog('info', `🔍 搜索完成，找到 ${result.data.transactions.length} 笔匹配的交易`);
+                } else {
+                    displayTransactionError('搜索失败: ' + result.error);
+                    addLog('error', `❌ 搜索交易失败: ${result.error}`);
+                }
+            } catch (error) {
+                displayTransactionError('搜索错误: ' + error.message);
+                addLog('error', `❌ 搜索交易失败: ${error.message}`);
+            }
+        }
+        
+        // 清除交易搜索
+        function clearTransactionSearch() {
+            document.getElementById('tx-search').value = '';
+            document.getElementById('tx-type-filter').value = 'all';
+            document.getElementById('tx-account-filter').value = '';
+            currentTransactionPage = 1;
+            refreshTransactionList();
+        }
+        
+        // 加载交易分页
+        function loadTransactionPage(direction) {
+            if (direction === 'prev' && currentTransactionPage > 1) {
+                currentTransactionPage--;
+            } else if (direction === 'next') {
+                currentTransactionPage++;
+            }
+            
+            refreshTransactionList();
+        }
+        
+        // 更新交易分页控制
+        function updateTransactionPagination(currentPage, totalItems) {
+            const prevBtn = document.getElementById('tx-prev-btn');
+            const nextBtn = document.getElementById('tx-next-btn');
+            const pageInfo = document.getElementById('tx-page-info');
+            
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = totalItems < transactionPageSize;
+            pageInfo.textContent = `第 ${currentPage} 页`;
+            
+            currentTransactionPage = currentPage;
+        }
+        
+        // 显示交易错误
+        function displayTransactionError(message) {
+            const container = document.getElementById('transaction-list');
+            container.innerHTML = `<div class="transaction-error">❌ ${message}</div>`;
+            document.getElementById('transaction-pagination').style.display = 'none';
+        }
+        
+        // 更新交易账户筛选选项
+        function updateTransactionAccountFilter() {
+            const select = document.getElementById('tx-account-filter');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">全部账户</option>';
+            
+            allWallets.forEach(wallet => {
+                select.innerHTML += `<option value="${wallet.address}">${wallet.name}</option>`;
+            });
+        }
+
+        // ===========================================
         // Tab页面切换功能
         // ===========================================
         
@@ -3480,6 +4021,9 @@
                     // 刷新钱包列表和余额
                     refreshWalletList();
                     refreshBalances();
+                    // 初始化交易记录
+                    updateTransactionAccountFilter();
+                    refreshTransactionList();
                     break;
                 case 'validator':
                     // 刷新验证者列表和奖励
